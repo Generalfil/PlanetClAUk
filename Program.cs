@@ -6,197 +6,214 @@ using System.Threading;
 using System.Net.Sockets;
 using System.IO;
 
-namespace TelnetNASAtest
+namespace LocalJPLProj
 {
-	class Program
-	{
-		static void Main()
-		{
-			JplConnect jplConnect = new JplConnect();
-			
-			jplConnect.ServerSocket("horizons.jpl.nasa.gov", 6775);
-		}
-	}
+    class Program
+    {
+        static void Main()
+        {
+            JplConnect jplConnect = new JplConnect();
 
-	public class JplConnect
-	{
-		private TcpClient client;
-		private Thread readWriteThread;
-		private NetworkStream networkStream;
-		private DateTime today; 
-		private DateTime tomorrow;
-		private double[] bodyChar = new double[6];
+            jplConnect.ServerSocket("horizons.jpl.nasa.gov", 6775);
+        }
+    }
 
-		public void ServerSocket(string ip, int port)
-		{
-			try
-			{
-				client = new TcpClient(ip, port);
-				Console.WriteLine("Connected to server.");
-			}
-			catch (SocketException)
-			{
-				Console.WriteLine("Failed to connect to server");
-				return;
-			}
+    public class JplConnect
+    {
+        private TcpClient client;
+        private Thread readWriteThread;
+        private NetworkStream networkStream;
+        private DateTime today;
+        private DateTime tomorrow;
+        private double[] bodyChar = new double[3];
 
-			//Assign networkstream
-			networkStream = client.GetStream();
+        public List<string> bodiesToAccess = new List<string>() { "199", "299", "399", "499", "599", "699", "799", "899", "999" };
+        public List<OribtalBody> oribtalBodies = new List<OribtalBody>();
 
-			//start socket read/write thread
-			readWriteThread = new Thread(readWrite);
-			readWriteThread.Start();
-			
-		}
+        public void ServerSocket(string ip, int port)
+        {
+            try
+            {
+                client = new TcpClient(ip, port);
+                Console.WriteLine("Connected to server.");
+                today = DateTime.Now;
+                tomorrow = today.AddDays(1);
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Failed to connect to server");
+                return;
+            }
 
-		private void readWrite()
-		{
-			string command, recieved;
-			bool title = false;
+            //Assign networkstream
+            networkStream = client.GetStream();
 
-			today = DateTime.Now;
-			tomorrow = today.AddDays(1);
+            //start socket read/write thread
+            readWriteThread = new Thread(readWrite);
+            readWriteThread.Start();
 
+        }
 
-			//Read first thing given
-			recieved = read();
-			Console.WriteLine(recieved);
+        private void readWrite()
+        {
+            string command, recieved;
+            bool title = false;
 
-			//Set up connection loop
-			while (true)
-			{
-				Console.Write("Response: ");
+            //Read first thing given
+            recieved = read();
+            Console.WriteLine(recieved);
 
-				if (!title)
-				{
-					command = "";
-				}
-				else
-				{
-					accessBody("499");
-					command = Console.ReadLine();
-					command = Console.ReadLine();
-				}
-				if (recieved == "\r\nHorizons> ")
-				{
-					title = true;
-				}
+            //Set up connection loop
+            while (true)
+            {
+                Console.Write("Response: ");
 
-				if (command == "exit")
-					break;
+                if (!title)
+                {
+                    command = "";
+                }
+                else
+                {
+                    foreach (var body in bodiesToAccess)
+                    {
+                        oribtalBodies.Add(AccessBody(body));
+                    }
+                    command = Console.ReadLine();
+                    command = Console.ReadLine();
+                }
+                if (recieved == "\r\nHorizons> ")
+                {
+                    title = true;
+                }
 
-				write(command);
-				Thread.Sleep(500);
-				recieved = read();
+                if (command == "exit")
+                    break;
 
-				Console.WriteLine(recieved);
-			}
+                write(command);
+                Thread.Sleep(500);
+                recieved = read();
 
-			Console.WriteLine("Disconnected from server");
-			networkStream.Close();
-			client.Close();
-		}
+                Console.WriteLine(recieved);
+            }
 
-
-		/// <summary>
-		/// Accesses orbital body through horizons and extracts ephemeris into vars and returns those vars into a double[]
-		/// </summary>
-		/// <param name="id"></param>
-		public OribtalBody accessBody(string id)
-		{
-			string[] _commands = new string[] { id, "e", "v", "500", "y", "eclip", today.ToString(), tomorrow.ToString(), "1d", "y", "1", "n" };
-			StringBuilder sb = new StringBuilder();
-			string m_stringholder;
-			double[] m_bodyChar = new double[6];
-			double body_x = 0;
-			double body_y = 0;
-			double body_z = 0;
+            Console.WriteLine("Disconnected from server");
+            networkStream.Close();
+            client.Close();
+        }
 
 
-			//Send body ID
-			write(id);
+        /// <summary>
+        /// Accesses orbital body through horizons and extracts ephemeris into vars and returns those vars into a double[]
+        /// </summary>
+        /// <param name="id"></param>
+        public OribtalBody AccessBody(string id)
+        {
+            string[] _commands = new string[] { id, "e", "v", "500@0", "y", "eclip", today.ToString(), tomorrow.ToString(), "1d", "y", "1", "n" };
+            StringBuilder sb = new StringBuilder();
+            string m_stringholder;
+            double[] m_bodyChar = new double[3];
 
-			//Send Command loop
-			for (int i = 1; i < _commands.Length; i++)
-			{
-				while (true)
-				{
-					if (networkStream.DataAvailable)
-						break;
-				}
-				write(_commands[i]);
-				Thread.Sleep(50);
-				sb.Append(read());
-			}
-			sb.Append(read());
-			m_stringholder = sb.ToString();
-			
-			//Get empheris
-			//$$SOE Start of ephemeris
-			int startPos = m_stringholder.LastIndexOf("$$SOE") + "$$SOE".Length + 1;
-			//$$EOE End of ephemeris
-			int length = m_stringholder.IndexOf("$$EOE") - startPos;
-			string sub = m_stringholder.Substring(startPos, length);
+            //Send body ID
+            write(id);
 
-			//Split into only today
-			m_stringholder = sub.Substring(0, sub.IndexOf("\r\n"));
+            //Send Command loop
+            for (int i = 1; i < _commands.Length; i++)
+            {
+                while (true)
+                {
+                    if (networkStream.DataAvailable)
+                        break;
+                }
+                write(_commands[i]);
+                Thread.Sleep(10);
+                sb.Append(read());
+            }
+            sb.Append(read());
+            m_stringholder = sb.ToString();
 
-			//Fixa string ^ den innehåller skit som inte ska med vilket gör exception ner
+            //Get empheris
+            //$$SOE Start of ephemeris
+            int startPos = m_stringholder.LastIndexOf("$$SOE") + "$$SOE".Length + 1;
+            //$$EOE End of ephemeris
+            int length = m_stringholder.IndexOf("$$EOE") - startPos;
+            string sub = m_stringholder.Substring(startPos, length);
 
-			//Split into Vars
-			string[] splitString = m_stringholder.Split(' ');
-			for (int i = 0; i < 6; i++)
-			{
-				m_bodyChar[i] = double.Parse(splitString[i]);
-			}
+            //Split into only today and it X Y Z vars
+            m_stringholder = sub.Substring(sub.IndexOf("X"), sub.IndexOf("\r\n VX")- sub.IndexOf("X"));
 
-			
-
-			OribtalBody oribtalBody = new OribtalBody(id, body_x, body_y, body_z);
-
-			Console.WriteLine(sub);
-
-			return oribtalBody;
-			
-		}
-
-		/// <summary>
-		/// Converts message string into bytes and then sends them to JPL
-		/// </summary>
-		/// <param name="message"></param>
-		public void write(string message)
-		{
-			message += Environment.NewLine;
-			byte[] messageBytes = Encoding.ASCII.GetBytes(message);
-			networkStream.Write(messageBytes, 0, messageBytes.Length);
-			networkStream.Flush();
-		}
+            /* "X = 2.732451391609071E-01 Y =-9.211728946147640E-01 Z =-1.366844194950514E-02"
+              
+             2.732451391609071E-01 Y 
+            -9.211728946147640E-01 Z 
+            -1.366844194950514E-02*/
 
 
-		/// <summary>
-		/// Reads network stream, has a buffer of 1024 bytes but reads all data through networkStream.DataAvailable
-		/// </summary>
-		/// <returns></returns>
-		public string read()
-		{
-			byte[] data = new byte[1024];
-			StringBuilder recieved = new StringBuilder();
+            //Split into Vars
+            string[] splitString = m_stringholder.Split('=');
+            for (int i = 1; i < 4; i++)
+            {
+                string m_split;
+                if (splitString[i].Length > 22)
+                {
+                    m_split = splitString[i].Substring(0, splitString[i].IndexOf(' ', 10));
+                }
+                else
+                {
+                    m_split = splitString[i];
+                }
 
-			int numberOfBytesRead = 0;
+                if (m_split[0] == ' ')
+                {
+                    m_split = m_split.Substring(1);
+                }
 
-			// Incoming message may be larger than the buffer size, therefore reads all available data through this loop before stitching it togheter. 
-			do
-			{
-				numberOfBytesRead = networkStream.Read(data, 0, data.Length);
+                bodyChar[i-1]= (double)Decimal.Parse(m_split.Replace('.', ','), System.Globalization.NumberStyles.Float);
+            }
 
-				recieved.AppendFormat("{0}", Encoding.ASCII.GetString(data, 0, numberOfBytesRead));
+            OribtalBody oribtalBody = new OribtalBody(id, bodyChar[0], bodyChar[1], bodyChar[2]);
+            Console.WriteLine("{0} body done", id);
 
-			}
-			while (networkStream.DataAvailable);
+            return oribtalBody;
+        }
+
+        /// <summary>
+        /// Converts message string into bytes and then sends them to JPL
+        /// </summary>
+        /// <param name="message"></param>
+        public void write(string message)
+        {
+            message += Environment.NewLine;
+            byte[] messageBytes = Encoding.ASCII.GetBytes(message);
+            networkStream.Write(messageBytes, 0, messageBytes.Length);
+            networkStream.Flush();
+        }
 
 
-			return recieved.ToString();
-		}
+        /// <summary>
+        /// Reads network stream, has a buffer of 1024 bytes but reads all data through networkStream.DataAvailable
+        /// </summary>
+        /// <returns></returns>
+        public string read()
+        {
+            byte[] data = new byte[1024];
+            StringBuilder recieved = new StringBuilder();
 
-	}
+            int numberOfBytesRead = 0;
+
+            // Incoming message may be larger than the buffer size, therefore reads all available data through this loop before stitching it togheter. 
+            do
+            {
+                numberOfBytesRead = networkStream.Read(data, 0, data.Length);
+
+                recieved.AppendFormat("{0}", Encoding.ASCII.GetString(data, 0, numberOfBytesRead));
+
+            }
+            while (networkStream.DataAvailable);
+
+
+            return recieved.ToString();
+        }
+
+    }
 }
+
