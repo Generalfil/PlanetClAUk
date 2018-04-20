@@ -220,6 +220,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\BodyController.cs" />
+    <Compile Include="Assets\Scripts\JPLConnect.cs" />
+    <Compile Include="Assets\Scripts\OrbitalBody.cs" />
     <Compile Include="Assets\Scripts\SpinningCube.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
