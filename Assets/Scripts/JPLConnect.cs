@@ -6,7 +6,7 @@ using System.Linq;
 using System.Net.Sockets;
 using UnityEngine;
 
-public class JPLConnect : MonoBehaviour {
+public class JPLConnect {
 
     private TcpClient client;
     private Thread readWriteThread;
@@ -14,19 +14,25 @@ public class JPLConnect : MonoBehaviour {
     private DateTime today;
     private DateTime tomorrow;
     private double[] bodyChar;
+    private List<string> m_bodiesToAccess;
+    private List<OrbitalBody> oribtalBodies;
 
-    public List<string> bodiesToAccess;
-    public List<OrbitalBody> oribtalBodies;
+    public bool clientDone = false;
 
     public JPLConnect()
     {
         bodyChar = new double[3];
-        bodiesToAccess = new List<string>() { "199", "299", "399", "499", "599", "699", "799", "899", "999" };
         oribtalBodies = new List<OrbitalBody>();
     }
 
-    public void ServerSocket(string ip, int port)
+    public List<OrbitalBody> GetBodyList()
     {
+        return oribtalBodies;
+    }
+
+    public void ServerSocket(string ip, int port, List<string> bodiesToAccess)
+    {
+        m_bodiesToAccess = bodiesToAccess;
         try
         {
             client = new TcpClient(ip, port);
@@ -69,7 +75,7 @@ public class JPLConnect : MonoBehaviour {
             }
             else
             {
-                foreach (var body in bodiesToAccess)
+                foreach (var body in m_bodiesToAccess)
                 {
                     oribtalBodies.Add(AccessBody(body));
                 }
@@ -94,6 +100,8 @@ public class JPLConnect : MonoBehaviour {
         Debug.Log("Disconnected from server");
         networkStream.Close();
         client.Close();
+        clientDone = true;
+
     }
 
 
@@ -103,7 +111,7 @@ public class JPLConnect : MonoBehaviour {
     /// <param name="id"></param>
     public OrbitalBody AccessBody(string id)
     {
-        string[] _commands = new string[] { id, "e", "v", "500@0", "y", "eclip", today.ToString(), tomorrow.ToString(), "1d", "y", "1", "n" };
+        string[] _commands = new string[] { "e", "v", "500@0", "y", "eclip", today.ToString(), tomorrow.ToString(), "1d", "y", "1", "n" };
         StringBuilder sb = new StringBuilder();
         string m_stringholder;
         Debug.Log("Starting Body" + id);
@@ -112,18 +120,15 @@ public class JPLConnect : MonoBehaviour {
         write(id);
         
         //Send Command loop
-        for (int i = 1; i < _commands.Length; i++)
+        for (int i = 0; i < _commands.Length; i++)
         {
-            Debug.Log("Entered Command Loop"); 
-            while (true)
-            {
-                if (networkStream.DataAvailable)
-                    break;
-            }
+            Debug.Log("Entered Command Loop");
+            Thread.Sleep(10);
             write(_commands[i]);
             Thread.Sleep(10);
             sb.Append(read());
         }
+        Debug.Log("Exits Command loop");
         sb.Append(read());
         m_stringholder = sb.ToString();
 
@@ -143,7 +148,7 @@ public class JPLConnect : MonoBehaviour {
         -9.211728946147640E-01 Z 
         -1.366844194950514E-02*/
 
-
+        Debug.Log("Ephemeris");
         //Split into Vars
         string[] splitString = m_stringholder.Split('=');
         for (int i = 1; i < 4; i++)
@@ -163,8 +168,9 @@ public class JPLConnect : MonoBehaviour {
                 m_split = m_split.Substring(1);
             }
 
-            bodyChar[i - 1] = (double)Decimal.Parse(m_split.Replace('.', ','), System.Globalization.NumberStyles.Float);
+            bodyChar[i - 1] = (double)Decimal.Parse(m_split, System.Globalization.NumberStyles.Float);
         }
+        Debug.Log("Converted to vars");
 
         OrbitalBody oribtalBody = new OrbitalBody(id, bodyChar[0], bodyChar[1], bodyChar[2]);
         Debug.Log(id + " body done" );
