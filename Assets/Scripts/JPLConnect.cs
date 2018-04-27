@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using System.Linq;
 using System.Net.Sockets;
 using UnityEngine;
 
@@ -33,6 +32,7 @@ public class JPLConnect {
     public void ServerSocket(string ip, int port, List<string> bodiesToAccess)
     {
         m_bodiesToAccess = bodiesToAccess;
+
         try
         {
             client = new TcpClient(ip, port);
@@ -67,28 +67,28 @@ public class JPLConnect {
         //Set up connection loop
         while (true)
         {
-            Debug.Log("Response: ");
-
-            if (!title)
-            {
-                command = "";
-            }
-            else
-            {
-                foreach (var body in m_bodiesToAccess)
-                {
-                    oribtalBodies.Add(AccessBody(body));
-                }
-                break;
-            }
+            //Check if at main menu
             if (recieved == "\r\nHorizons> ")
             {
                 title = true;
                 Debug.Log("Accessed Horizons");
             }
 
-            if (command == "exit")
+            //If not at main menu, send empty command
+            if (!title)
+            {
+                command = "";
+            }
+            else
+            {
+                //Accesses bodies
+                foreach (var body in m_bodiesToAccess)
+                {
+                    oribtalBodies.Add(AccessBody(body));
+                }
                 break;
+            }
+            
 
             write(command);
             Thread.Sleep(500);
