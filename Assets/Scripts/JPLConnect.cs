@@ -12,15 +12,14 @@ public class JPLConnect {
     private NetworkStream networkStream;
     private DateTime today;
     private DateTime tomorrow;
-    private double[] bodyChar;
     private List<string> m_bodiesToAccess;
     private List<OrbitalBody> oribtalBodies;
 
     public bool clientDone = false;
+    private readonly string startingBody = "199";
 
     public JPLConnect()
     {
-        bodyChar = new double[3];
         oribtalBodies = new List<OrbitalBody>();
     }
 
@@ -81,17 +80,44 @@ public class JPLConnect {
             }
             else
             {
-                //Accesses bodies
-                foreach (var body in m_bodiesToAccess)
+                try
                 {
-                    oribtalBodies.Add(AccessBody(body));
+                    //Accesses bodies
+                    foreach (var body in m_bodiesToAccess)
+                    {
+                        short planet_timeout = 50;
+                        for (int attempts = 0; attempts < 5; attempts++)
+                        {
+                            try
+                            {
+                                oribtalBodies.Add(AccessBody(body));
+                                recieved = read();
+                                Thread.Sleep(planet_timeout);
+                                break;
+                            }
+                            catch
+                            {
+                                planet_timeout += 25;
+                                Debug.Log("Failed To Access:" + body + "Attempt:" + attempts + "Retrying:");
+                                Thread.Sleep(50);
+                                //write("-");
+                                Thread.Sleep(50);
+                            }
+                        }
+                    }
+
+                    break;
                 }
-                break;
+                catch
+                {
+                    Debug.Log("Failed to get orbitalbodies, ending connection");
+                    break;
+                }
+               
             }
             
-
             write(command);
-            Thread.Sleep(500);
+            Thread.Sleep(300);
             recieved = read();
 
             Debug.Log(recieved);
@@ -101,7 +127,6 @@ public class JPLConnect {
         networkStream.Close();
         client.Close();
         clientDone = true;
-
     }
 
 
@@ -111,14 +136,50 @@ public class JPLConnect {
     /// <param name="id"></param>
     public OrbitalBody AccessBody(string id)
     {
-        string[] _commands = new string[] { "e", "v", "500@0", "y", "eclip", today.ToString(), tomorrow.ToString(), "1d", "y", "1", "n" };
+        string[] initCommands = new string[] { "e", "v", "500@0", "y", "eclip", today.ToString(), tomorrow.ToString(), "1d", "y", "1", "n" };
+        string[] followUpCommands = new string[] { "e+", "n" };
+        double[] bodyChar = new double[3];
         StringBuilder sb = new StringBuilder();
         string m_stringholder;
-        Debug.Log("Starting Body" + id);
 
+
+        Debug.Log("Starting Body" + id);
         //Send body ID
         write(id);
+        sb.Append(read());
+
+        if (id == startingBody)
+        {
+            m_stringholder = SendCommandsForBody(sb, initCommands);
+        }
+        else
+        {
+            m_stringholder = SendCommandsForBody(sb, followUpCommands);
+        }
         
+        //Get empheris
+        //$$SOE Start of ephemeris
+        int startPos = m_stringholder.LastIndexOf("$$SOE") + "$$SOE".Length + 1;
+        //$$EOE End of ephemeris
+        int length = m_stringholder.IndexOf("$$EOE") - startPos;
+        string sub = m_stringholder.Substring(startPos, length);
+
+        //Split into only today and it X Y Z sections
+        m_stringholder = sub.Substring(sub.IndexOf("X"), sub.IndexOf("\r\n VX") - sub.IndexOf("X"));
+        Debug.Log("Ephemeris done");
+
+        //Split into Vars
+        bodyChar = SplitIntoVars(m_stringholder);
+
+        OrbitalBody orbitalBody = new OrbitalBody(id, bodyChar[0], bodyChar[1], bodyChar[2]);
+        Debug.Log(id + " body done");
+
+        return orbitalBody;
+    }
+
+    private string SendCommandsForBody(StringBuilder sb, string[] _commands)
+    {
+        string m_stringholder;
         //Send Command loop
         for (int i = 0; i < _commands.Length; i++)
         {
@@ -131,25 +192,16 @@ public class JPLConnect {
         Debug.Log("Exits Command loop");
         sb.Append(read());
         m_stringholder = sb.ToString();
+        return m_stringholder;
+    }
 
-        //Get empheris
-        //$$SOE Start of ephemeris
-        int startPos = m_stringholder.LastIndexOf("$$SOE") + "$$SOE".Length + 1;
-        //$$EOE End of ephemeris
-        int length = m_stringholder.IndexOf("$$EOE") - startPos;
-        string sub = m_stringholder.Substring(startPos, length);
-
-        //Split into only today and it X Y Z vars
-        m_stringholder = sub.Substring(sub.IndexOf("X"), sub.IndexOf("\r\n VX") - sub.IndexOf("X"));
-
-        /* "X = 2.732451391609071E-01 Y =-9.211728946147640E-01 Z =-1.366844194950514E-02"
-
-         2.732451391609071E-01 Y 
-        -9.211728946147640E-01 Z 
-        -1.366844194950514E-02*/
-
-        Debug.Log("Ephemeris");
-        //Split into Vars
+    /// <summary>
+    /// Splits a string into x y z decimals, these are converted to a double
+    /// </summary>
+    /// <param name="m_stringholder"></param>
+    private double[] SplitIntoVars(string m_stringholder)
+    {
+        double[] m_bodyChar = new double[3];
         string[] splitString = m_stringholder.Split('=');
         for (int i = 1; i < 4; i++)
         {
@@ -168,14 +220,10 @@ public class JPLConnect {
                 m_split = m_split.Substring(1);
             }
 
-            bodyChar[i - 1] = (double)Decimal.Parse(m_split, System.Globalization.NumberStyles.Float);
+            m_bodyChar[i - 1] = (double)Decimal.Parse(m_split, System.Globalization.NumberStyles.Float);
         }
         Debug.Log("Converted to vars");
-
-        OrbitalBody oribtalBody = new OrbitalBody(id, bodyChar[0], bodyChar[1], bodyChar[2]);
-        Debug.Log(id + " body done" );
-
-        return oribtalBody;
+        return m_bodyChar;
     }
 
     /// <summary>

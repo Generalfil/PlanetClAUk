@@ -27,7 +27,7 @@ public class BodyController : MonoBehaviour {
         if (jplConnect.clientDone)
         {
             orbitalBodies = jplConnect.GetBodyList();
-            Debug.Log("copied bodies");
+            Debug.Log("Copied bodies");
             foreach (var item in orbitalBodies)
             {
                 body.name = item.ID;           
