@@ -88,6 +88,7 @@ public class JPLConnect {
                         short planet_timeout = 50;
                         for (int attempts = 0; attempts < 5; attempts++)
                         {
+                            Thread.Sleep(25);
                             try
                             {
                                 oribtalBodies.Add(AccessBody(body));
@@ -97,11 +98,9 @@ public class JPLConnect {
                             }
                             catch
                             {
-                                planet_timeout += 25;
+                                planet_timeout += 50;
                                 Debug.Log("Failed To Access:" + body + "Attempt:" + attempts + "Retrying:");
-                                Thread.Sleep(50);
-                                //write("-");
-                                Thread.Sleep(50);
+                                Thread.Sleep(planet_timeout);
                             }
                         }
                     }

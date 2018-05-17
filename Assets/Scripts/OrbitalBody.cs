@@ -35,7 +35,10 @@ public class OrbitalBody : MonoBehaviour {
         m_x_value = x;
         m_y_value = y;
         m_z_value = z;
+    }
 
-        //GameObject.Find(m_id).AddComponent<OrbitalBody>();
+    public void SetObjectPosition()
+    {
+        gameObject.transform.position = new Vector3((float)X_value, (float)Z_value, (float)Y_value);
     }
 }
