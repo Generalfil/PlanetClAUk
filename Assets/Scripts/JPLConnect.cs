@@ -16,11 +16,16 @@ public class JPLConnect {
     private List<OrbitalBody> oribtalBodies;
 
     public bool clientDone = false;
-    private readonly string startingBody = "199";
+    private string startingBody;
 
     public JPLConnect()
     {
         oribtalBodies = new List<OrbitalBody>();
+    }
+
+    ~JPLConnect()
+    {
+        readWriteThread.Abort();
     }
 
     public List<OrbitalBody> GetBodyList()
@@ -31,6 +36,7 @@ public class JPLConnect {
     public void ServerSocket(string ip, int port, List<string> bodiesToAccess)
     {
         m_bodiesToAccess = bodiesToAccess;
+        startingBody = m_bodiesToAccess[0];
 
         try
         {
@@ -88,7 +94,7 @@ public class JPLConnect {
                         short planet_timeout = 50;
                         for (int attempts = 0; attempts < 5; attempts++)
                         {
-                            Thread.Sleep(25);
+                            Thread.Sleep(planet_timeout);
                             try
                             {
                                 oribtalBodies.Add(AccessBody(body));

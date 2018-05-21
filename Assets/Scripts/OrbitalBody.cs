@@ -1,12 +1,17 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
 public class OrbitalBody : MonoBehaviour {
-
+    [SerializeField]
     private string m_id;
+    [SerializeField]
     private double m_x_value;
+    [SerializeField]
     private double m_y_value;
+    [SerializeField]
     private double m_z_value;
 
     public string ID
@@ -35,6 +40,14 @@ public class OrbitalBody : MonoBehaviour {
         m_x_value = x;
         m_y_value = y;
         m_z_value = z;
+    }
+
+    public void SetBodyReference(OrbitalBody o)
+    {
+        m_id = o.ID;
+        m_x_value = o.X_value;
+        m_y_value = o.Y_value;
+        m_z_value = o.Z_value;
     }
 
     public void SetObjectPosition()

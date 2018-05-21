@@ -7,8 +7,10 @@ public class BodyController : MonoBehaviour {
     JPLConnect jplConnect = new JPLConnect();
 
     private List<string> bodiesToAccess = new List<string>();
-    public List<OrbitalBody> orbitalBodies = new List<OrbitalBody>();
-    public GameObject body;
+    private List<GameObject> activeBodies = new List<GameObject>();
+    private SaveLoad saveLoad = new SaveLoad();
+
+    public List<OrbitalBody> orbitalBodyData = new List<OrbitalBody>();
 
     public bool canUpdate = false;
 
@@ -19,10 +21,12 @@ public class BodyController : MonoBehaviour {
 
     private void Awake()
     {
-        foreach (Transform body in transform)
+        foreach (Transform bChild in transform)
         {
-            bodiesToAccess.Add(body.name);
+            bodiesToAccess.Add(bChild.name);
+            activeBodies.Add(bChild.gameObject);
         }
+        gameObject.AddComponent<SaveLoad>();
 
         AccessJPLHorizon();
     }
@@ -32,16 +36,28 @@ public class BodyController : MonoBehaviour {
 
         if (jplConnect.clientDone)
         {
-            orbitalBodies = jplConnect.GetBodyList();
+            orbitalBodyData = jplConnect.GetBodyList();
             Debug.Log("Copied bodies");
-            foreach (var item in orbitalBodies)
+
+            for (int i = 0; i < activeBodies.Count; i++)
             {
-                //GameObject.Find(item.ID).transform.position = new Vector3((float)item.X_value, (float)item.Z_value, (float)item.Y_value);
-                //var go = GameObject.Find(item.ID).AddComponent<OrbitalBody>();
+                try
+                {
+                    activeBodies[i].SetActive(true);
 
-                //Fix so that every body has a orbitalbody as component, then in jplconnect update that component instead of trying to add a new one
+                    activeBodies[i].GetComponent<OrbitalBody>()
+                        .SetBodyReference(orbitalBodyData[i]);
 
+                    activeBodies[i].GetComponent<OrbitalBody>()
+                        .SetObjectPosition();
+                }
+                catch
+                {
+                    Debug.Log("Cant update component on: " + activeBodies[i].name);
+                    activeBodies[i].SetActive(false);
+                } 
             }
+
             jplConnect.clientDone = false;
             canUpdate = true;
         }
@@ -52,7 +68,12 @@ public class BodyController : MonoBehaviour {
             Debug.Log("Started update");
             AccessJPLHorizon();
         }
-	}
+        if (canUpdate && Input.GetButtonDown("Fire1"))
+        {
+            Debug.Log("Try save");
+            saveLoad.SaveOrbitalBodies(orbitalBodyData);
+        }
+    }
 
     private void AccessJPLHorizon()
     {
