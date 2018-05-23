@@ -9,7 +9,7 @@ using UnityEngine;
 public class SaveLoad : MonoBehaviour {
 
     private string gameDataFileName = "data.json";
-    private List<OrbitalBody> LoadedBodies = new List<OrbitalBody>();
+    private List<BodySaveData> LoadedBodies = new List<BodySaveData>();
 
     void Start()
     {
@@ -18,12 +18,12 @@ public class SaveLoad : MonoBehaviour {
         LoadOrbitalBodies();
     }
 
-    public List<OrbitalBody> GetLoadedBodies()
+    public List<BodySaveData> GetLoadedBodies()
     {
         return LoadedBodies;
     }
 
-    private void LoadOrbitalBodies()
+    public void LoadOrbitalBodies()
     {
         // Path.Combine combines strings into a file path
         // Application.StreamingAssets points to Assets/StreamingAssets in the Editor, and the StreamingAssets folder in a build
@@ -39,12 +39,12 @@ public class SaveLoad : MonoBehaviour {
             {
                 string temp = "{"+item;
 
-                OrbitalBody loadedBody = JsonUtility.FromJson<OrbitalBody>(temp);
+                BodySaveData loadedBody = JsonUtility.FromJson<BodySaveData>(temp);
                 LoadedBodies.Add(loadedBody);
             }
 
             Debug.Log("he");
-            //OrbitalBody loadedData = JsonUtility.FromJson<OrbitalBody>(dataAsJson);
+            //BodySaveData loadedData = JsonUtility.FromJson<BodySaveData>(dataAsJson);
 
             // Retrieve the allRoundData property of loadedData
         }
@@ -61,7 +61,8 @@ public class SaveLoad : MonoBehaviour {
 
         foreach (var item in objToSave)
         {
-            sb.Append(JsonUtility.ToJson(item));
+            var saveObj = new BodySaveData(item.ID, item.X_value, item.Y_value, item.Z_value);
+            sb.Append(JsonUtility.ToJson(saveObj));
         }
 
         string filePath = Application.dataPath + gameDataFileName;

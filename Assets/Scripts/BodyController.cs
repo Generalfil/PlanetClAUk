@@ -8,7 +8,7 @@ public class BodyController : MonoBehaviour {
 
     private List<string> bodiesToAccess = new List<string>();
     private List<GameObject> activeBodies = new List<GameObject>();
-    private SaveLoad saveLoad = new SaveLoad();
+    private SaveLoad saveLoad;
 
     public List<OrbitalBody> orbitalBodyData = new List<OrbitalBody>();
 
@@ -26,8 +26,13 @@ public class BodyController : MonoBehaviour {
             bodiesToAccess.Add(bChild.name);
             activeBodies.Add(bChild.gameObject);
         }
-        gameObject.AddComponent<SaveLoad>();
+        saveLoad = gameObject.AddComponent<SaveLoad>();
+        
+        //Load saved positions
+        saveLoad.LoadOrbitalBodies();
+        UpdateActiveBodies(saveLoad.GetLoadedBodies());
 
+        //Contact Nasa
         AccessJPLHorizon();
     }
 
@@ -39,24 +44,7 @@ public class BodyController : MonoBehaviour {
             orbitalBodyData = jplConnect.GetBodyList();
             Debug.Log("Copied bodies");
 
-            for (int i = 0; i < activeBodies.Count; i++)
-            {
-                try
-                {
-                    activeBodies[i].SetActive(true);
-
-                    activeBodies[i].GetComponent<OrbitalBody>()
-                        .SetBodyReference(orbitalBodyData[i]);
-
-                    activeBodies[i].GetComponent<OrbitalBody>()
-                        .SetObjectPosition();
-                }
-                catch
-                {
-                    Debug.Log("Cant update component on: " + activeBodies[i].name);
-                    activeBodies[i].SetActive(false);
-                } 
-            }
+            UpdateActiveBodies(orbitalBodyData);
 
             jplConnect.clientDone = false;
             canUpdate = true;
@@ -72,6 +60,36 @@ public class BodyController : MonoBehaviour {
         {
             Debug.Log("Try save");
             saveLoad.SaveOrbitalBodies(orbitalBodyData);
+        }
+    }
+
+    private void UpdateActiveBodies<T>(List<T> m_bodyRefrence)
+    {
+        for (int i = 0; i < activeBodies.Count; i++)
+        {
+            try
+            {
+                activeBodies[i].SetActive(true);
+
+                if (m_bodyRefrence is List<OrbitalBody>)
+                {
+                    activeBodies[i].GetComponent<OrbitalBody>()
+                        .SetBodyReference(m_bodyRefrence[i] as OrbitalBody);
+                }
+                else
+                {
+                    activeBodies[i].GetComponent<OrbitalBody>()
+                        .SetBodyReference(m_bodyRefrence[i] as BodySaveData);
+                }
+                
+                activeBodies[i].GetComponent<OrbitalBody>()
+                    .SetObjectPosition();
+            }
+            catch
+            {
+                Debug.Log("Cant update component on: " + activeBodies[i].name);
+                activeBodies[i].SetActive(false);
+            }
         }
     }
 
