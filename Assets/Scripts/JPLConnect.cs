@@ -23,7 +23,7 @@ public class JPLConnect {
         oribtalBodies = new List<OrbitalBody>();
     }
 
-    ~JPLConnect()
+    void OnApplicationExit()
     {
         readWriteThread.Abort();
     }

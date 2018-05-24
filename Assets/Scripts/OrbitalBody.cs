@@ -57,6 +57,7 @@ public class OrbitalBody : MonoBehaviour
 
     public void SetObjectPosition()
     {
-        gameObject.transform.position = new Vector3((float)X_value, (float)Z_value, (float)Y_value);
+        int auMultiplier = 10;
+        gameObject.transform.position = new Vector3((float)X_value * auMultiplier, (float)Z_value *auMultiplier, (float)Y_value *auMultiplier);
     }
 }

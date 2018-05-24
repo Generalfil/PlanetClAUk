@@ -33,7 +33,7 @@ public class BodyController : MonoBehaviour {
         UpdateActiveBodies(saveLoad.GetLoadedBodies());
 
         //Contact Nasa
-        AccessJPLHorizon();
+        //AccessJPLHorizon();
     }
 
     // Update is called once per frame
@@ -45,6 +45,9 @@ public class BodyController : MonoBehaviour {
             Debug.Log("Copied bodies");
 
             UpdateActiveBodies(orbitalBodyData);
+
+            Debug.Log("Try save");
+            saveLoad.SaveOrbitalBodies(orbitalBodyData);
 
             jplConnect.clientDone = false;
             canUpdate = true;
@@ -63,8 +66,14 @@ public class BodyController : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Method to update all bodies in scene
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="m_bodyRefrence"></param>
     private void UpdateActiveBodies<T>(List<T> m_bodyRefrence)
     {
+        Debug.Log("Trying to update active bodies");
         for (int i = 0; i < activeBodies.Count; i++)
         {
             try

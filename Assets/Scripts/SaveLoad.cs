@@ -43,7 +43,7 @@ public class SaveLoad : MonoBehaviour {
                 LoadedBodies.Add(loadedBody);
             }
 
-            Debug.Log("he");
+            Debug.Log("Loaded BodyData");
             //BodySaveData loadedData = JsonUtility.FromJson<BodySaveData>(dataAsJson);
 
             // Retrieve the allRoundData property of loadedData
@@ -54,7 +54,7 @@ public class SaveLoad : MonoBehaviour {
         }
     }
 
-    // This function could be extended easily to handle any additional data we wanted to store in our PlayerProgress object
+    
     public void SaveOrbitalBodies(List<OrbitalBody> objToSave)
     {
         StringBuilder sb = new StringBuilder();
