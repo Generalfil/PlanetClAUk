@@ -7,16 +7,18 @@ using UnityEngine;
 [RequireComponent(typeof(LineRenderer))]
 public class OrbitHandler : MonoBehaviour {
 
-    public Vector3 radius = new Vector3(1f, 1f, 1f);
-    //public float rotationAngle = 45;
-    private int resolution = 10;
+    public int resolution = 50;
 
     //public double mAnomaly;
-    public float semiMajorAxis;
-    public float eccentrity;
-    public float argumentofP;
-    public float longOfAccNode;
-    public float inclination;
+    public double semiMajorAxis;
+    public double eccentrity;
+    public double argumentofP;
+    public double longOfAccNode;
+    public double inclination;
+
+    public double E;
+    public double T;
+    public double r;
 
     private Vector3[] positions;
     private LineRenderer lr;
@@ -29,68 +31,73 @@ public class OrbitHandler : MonoBehaviour {
 
     public void UpdateEllipse()
     {
-
         if (lr == null)
             lr = GetComponent<LineRenderer>();
 
-        lr.positionCount = resolution + 3;
+        lr.positionCount = resolution + 2;
 
-        AddPointToLineRenderer( 0);
+        lr.SetPosition(0,AddPointToLineRenderer( 0));
         for (int i = 1; i <= resolution + 1; i++)
         {
-            AddPointToLineRenderer(i);
+            lr.SetPosition(i, AddPointToLineRenderer(i));
         }
-        AddPointToLineRenderer(resolution + 2);
     }
 
-    void AddPointToLineRenderer(int index)
+    Vector3 AddPointToLineRenderer(float index)
     {
-        // pointQuaternion = Quaternion.AngleAxis(rotationAngle, Vector3.forward);
         Vector3 pointPosition;
 
-        pointPosition = KeplerToCarthesian(index, semiMajorAxis,eccentrity,argumentofP,longOfAccNode, inclination);
-        //pointPosition = pointQuaternion * pointPosition;
+        pointPosition = KeplerToCarthesian(index * Mathf.Deg2Rad , semiMajorAxis,eccentrity,argumentofP,longOfAccNode, inclination);
 
-        lr.SetPosition(index, pointPosition);
+        return pointPosition;        
     }
 
     /// <summary>
     /// Convert keplarian elements into vector3, needs (Mean Anomaly, Semi Majoris Axis, Eccentricity, Argument of Periapsis, Longitude of Ascending node, Inclination) 
     /// </summary>
     /// <returns></returns>
-    Vector3 KeplerToCarthesian(double meanAnomaly , float a, float e, float w, float lan, float inc)
+    Vector3 KeplerToCarthesian(double meanAnomaly , double a, double e, double w, double O, double inc)
     {
-        double E = GetEccentricAnomaly(meanAnomaly, e);
-        double T = GetTrueAnomaly(e, E);
+        //Fix so inlication calculates properly
+        inc *= Mathf.Deg2Rad;
 
-        double nu = 2 * Math.Atan(Math.Sqrt((1 + e) / (1 - e)) * Math.Tan(E / 2));
+        //Gets E and True Anomaly
+        E = GetEccentricAnomaly(meanAnomaly, e);
+        T = GetTrueAnomaly(e, E) * Mathf.Deg2Rad;
 
-        double r = a * (1 - e * Math.Cos(E));
+        r = a * (1 - e * Math.Cos(E));
 
-        //h = Math.Sqrt(mu * a * (1 - e **2));
+        Vector3 o = new Vector3((float)(r * Math.Cos(T)), (float)(r * Math.Sin(T)), 0);
 
-        double X = r * (Math.Cos(lan) * Math.Cos(w + nu) - Math.Sin(lan) * Math.Sin(w + nu) * Math.Cos(inc));
-        double Y = r * (Math.Sin(lan) * Math.Cos(w + nu) + Math.Cos(lan) * Math.Sin(w + nu) * Math.Cos(inc));
-        double Z = r * (Math.Sin(inc) * Math.Sin(w + nu));
+        double rx, ry, rz;
+        rx = o.x; ry = o.y; rz = o.z;
 
-        return new Vector3((float)X *10, (float) Z*10, (float) Y*10);
-    }
+        rx = (o.x * (Math.Cos(w) * Math.Cos(O) - Math.Sin(w) * Math.Cos(inc) * Math.Sin(O)) -
+                o.y * (Math.Sin(w) * Math.Cos(O) + Math.Cos(w) * Math.Cos(inc) * Math.Sin(O)));
+        ry = (o.x * (Math.Cos(w) * Math.Sin(O) + Math.Sin(w) * Math.Cos(inc) * Math.Cos(O)) +
+            o.y * (Math.Cos(w) * Math.Cos(inc) * Math.Cos(O) - Math.Sin(w) * Math.Sin(O)));
+        rz = (o.x * (Math.Sin(w) * Math.Sin(inc)) + o.y * (Math.Cos(w) * Math.Sin(inc)));
 
-    private double GetTrueAnomaly(float e, double E)
-    {
-        int dp = 6;
+        //2D Code
+        /*double C = Math.Cos(E);
         double S = Math.Sin(E);
 
-        double C = Math.Cos(E);
+        rx = r * (C - e);
+        ry = r * Math.Sqrt(1.0 - e * e) * S;
+        rz = 0;*/
 
-        double fak = Math.Sqrt(1.0 - e * e);
+        return new Vector3((float)rx *10, (float) rz*10, (float) ry*10);
+    }
 
-        double phi = Math.Atan2(fak * S, C - e) / Mathf.Deg2Rad;
+    private double GetTrueAnomaly(double e, double E)
+    {
+        int dp = 6;
+        double phi = Math.Atan2(Math.Sqrt(1 - e) * Math.Cos(E / 2), Math.Sqrt(1 + e) * Math.Sin(E / 2)) / (Math.PI / 180);
 
         return Math.Round(phi * Math.Pow(10, dp)) / Math.Pow(10, dp);
     }
 
-    private double GetEccentricAnomaly(double meanAnomaly, float e)
+    private double GetEccentricAnomaly(double meanAnomaly, double e)
     {
         //Solve kepler equation to get Ecentric anomaly
         int tolerance = 6;
@@ -109,7 +116,6 @@ public class OrbitHandler : MonoBehaviour {
 
         F = E - e * Math.Sin(meanAnomaly) - meanAnomaly;
 
-        //Refine Function(E) loop
         while ((Math.Abs(F) > delta) && (i < maxIter))
         {
 
@@ -118,7 +124,7 @@ public class OrbitHandler : MonoBehaviour {
             i++;
         }
 
-        E *= Mathf.Deg2Rad;
+        E /= (Math.PI / 180.0);
 
         return Math.Round(E * Math.Pow(10, tolerance)) / Math.Pow(10, tolerance);
     }
