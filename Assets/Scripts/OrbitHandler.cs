@@ -12,13 +12,15 @@ public class OrbitHandler : MonoBehaviour {
     //public double mAnomaly;
     public double semiMajorAxis;
     public double eccentrity;
-    public double argumentofP;
+    public double LongitudeofP;
     public double longOfAccNode;
     public double inclination;
 
     public double E;
     public double T;
     public double r;
+    public bool caluclateArgP;
+    public double W;
 
     private Vector3[] positions;
     private LineRenderer lr;
@@ -47,36 +49,45 @@ public class OrbitHandler : MonoBehaviour {
     {
         Vector3 pointPosition;
 
-        pointPosition = KeplerToCarthesian(index * Mathf.Deg2Rad , semiMajorAxis,eccentrity,argumentofP,longOfAccNode, inclination);
+        pointPosition = KeplerToCarthesian(index * Mathf.Deg2Rad , semiMajorAxis,eccentrity,LongitudeofP,longOfAccNode, inclination);
 
         return pointPosition;        
     }
 
     /// <summary>
-    /// Convert keplarian elements into vector3, needs (Mean Anomaly, Semi Majoris Axis, Eccentricity, Argument of Periapsis, Longitude of Ascending node, Inclination) 
+    /// Convert keplarian elements into vector3, needs (Mean Anomaly, Semi Majoris Axis, Eccentricity, Longitude of Periapsis, Longitude of Ascending node, Inclination) 
     /// </summary>
     /// <returns></returns>
     Vector3 KeplerToCarthesian(double meanAnomaly , double a, double e, double w, double O, double inc)
     {
-        //Fix so inlication calculates properly
+        //Deg2Rad so varbibles calculates properly
         inc *= Mathf.Deg2Rad;
+        w *= Mathf.Deg2Rad;
+        O *= Mathf.Deg2Rad;
+
+        //Longitude of P to Argument of P
+        if (caluclateArgP)
+            W = w - O;
+        else
+            W = w;
+        
 
         //Gets E and True Anomaly
         E = GetEccentricAnomaly(meanAnomaly, e);
         T = GetTrueAnomaly(e, E) * Mathf.Deg2Rad;
 
-        r = a * (1 - e * Math.Cos(E));
+        r = a * ((1 - (e*e)) / (1 + e * Math.Cos(T)));
 
         Vector3 o = new Vector3((float)(r * Math.Cos(T)), (float)(r * Math.Sin(T)), 0);
 
         double rx, ry, rz;
         rx = o.x; ry = o.y; rz = o.z;
 
-        rx = (o.x * (Math.Cos(w) * Math.Cos(O) - Math.Sin(w) * Math.Cos(inc) * Math.Sin(O)) -
-                o.y * (Math.Sin(w) * Math.Cos(O) + Math.Cos(w) * Math.Cos(inc) * Math.Sin(O)));
-        ry = (o.x * (Math.Cos(w) * Math.Sin(O) + Math.Sin(w) * Math.Cos(inc) * Math.Cos(O)) +
-            o.y * (Math.Cos(w) * Math.Cos(inc) * Math.Cos(O) - Math.Sin(w) * Math.Sin(O)));
-        rz = (o.x * (Math.Sin(w) * Math.Sin(inc)) + o.y * (Math.Cos(w) * Math.Sin(inc)));
+        rx = (o.x * (Math.Cos(W) * Math.Cos(O) - Math.Sin(W) * Math.Cos(inc) * Math.Sin(O)) -
+                o.y * (Math.Sin(W) * Math.Cos(O) + Math.Cos(W) * Math.Cos(inc) * Math.Sin(O)));
+        ry = (o.x * (Math.Cos(W) * Math.Sin(O) + Math.Sin(W) * Math.Cos(inc) * Math.Cos(O)) +
+            o.y * (Math.Cos(W) * Math.Cos(inc) * Math.Cos(O) - Math.Sin(W) * Math.Sin(O)));
+        rz = (o.x * (Math.Sin(W) * Math.Sin(inc)) + o.y * (Math.Cos(W) * Math.Sin(inc)));
 
         //2D Code
         /*double C = Math.Cos(E);
