@@ -12,6 +12,9 @@ public class BodyController : MonoBehaviour {
 
     public List<OrbitalBody> orbitalBodyData = new List<OrbitalBody>();
 
+    //Sets modfier for AU scale. Default: 10 (1 unit in Unity = 0.1 AU) 
+    public static int auMultiplier = 10;
+
     public bool canUpdate = false;
 
     // Use this for initialization

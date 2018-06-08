@@ -23,7 +23,7 @@ public class JPLConnect {
         oribtalBodies = new List<OrbitalBody>();
     }
 
-    void OnApplicationExit()
+    private void OnApplicationExit()
     {
         readWriteThread.Abort();
     }
@@ -54,7 +54,7 @@ public class JPLConnect {
         //Assign networkstream
         networkStream = client.GetStream();
 
-        //start socket read/write thread
+        //start socket Read/write thread
         readWriteThread = new Thread(readWrite);
         readWriteThread.Start();
 
@@ -66,7 +66,7 @@ public class JPLConnect {
         bool title = false;
 
         //Read first thing given
-        recieved = read();
+        recieved = Read();
         Debug.Log(recieved);
 
         //Set up connection loop
@@ -98,7 +98,7 @@ public class JPLConnect {
                             try
                             {
                                 oribtalBodies.Add(AccessBody(body));
-                                recieved = read();
+                                recieved = Read();
                                 Thread.Sleep(planet_timeout);
                                 break;
                             }
@@ -123,7 +123,7 @@ public class JPLConnect {
             
             write(command);
             Thread.Sleep(300);
-            recieved = read();
+            recieved = Read();
 
             Debug.Log(recieved);
         }
@@ -151,7 +151,7 @@ public class JPLConnect {
         Debug.Log("Starting Body" + id);
         //Send body ID
         write(id);
-        sb.Append(read());
+        sb.Append(Read());
 
         if (id == startingBody)
         {
@@ -192,10 +192,10 @@ public class JPLConnect {
             Thread.Sleep(10);
             write(_commands[i]);
             Thread.Sleep(10);
-            sb.Append(read());
+            sb.Append(Read());
         }
         Debug.Log("Exits Command loop");
-        sb.Append(read());
+        sb.Append(Read());
         m_stringholder = sb.ToString();
         return m_stringholder;
     }
@@ -248,7 +248,7 @@ public class JPLConnect {
     /// Reads network stream, has a buffer of 1024 bytes but reads all data through networkStream.DataAvailable
     /// </summary>
     /// <returns></returns>
-    public string read()
+    public string Read()
     {
         byte[] data = new byte[1024];
         StringBuilder recieved = new StringBuilder();
@@ -262,7 +262,6 @@ public class JPLConnect {
             recieved.AppendFormat("{0}", Encoding.ASCII.GetString(data, 0, numberOfBytesRead));
         }
         while (networkStream.DataAvailable);
-        
         
         return recieved.ToString();
     }

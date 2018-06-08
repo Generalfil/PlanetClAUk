@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class OrbitalBody : MonoBehaviour
 {
@@ -57,7 +54,6 @@ public class OrbitalBody : MonoBehaviour
 
     public void SetObjectPosition()
     {
-        int auMultiplier = 10;
-        gameObject.transform.position = new Vector3((float)X_value * auMultiplier, (float)Z_value *auMultiplier, (float)Y_value *auMultiplier);
+        gameObject.transform.position = new Vector3((float)X_value * BodyController.auMultiplier, (float)Z_value * BodyController.auMultiplier, (float)Y_value * BodyController.auMultiplier);
     }
 }
