@@ -24,6 +24,7 @@ public class OrbitHandler : MonoBehaviour {
 
     private Vector3[] positions;
     private LineRenderer lr;
+    private int orbitTolerance = 6;
 
 
     void OnValidate()
@@ -38,7 +39,7 @@ public class OrbitHandler : MonoBehaviour {
 
         lr.positionCount = resolution + 2;
 
-        lr.SetPosition(0,AddPointToLineRenderer( 0));
+        lr.SetPosition(0,AddPointToLineRenderer(0));
         for (int i = 1; i <= resolution + 1; i++)
         {
             lr.SetPosition(i, AddPointToLineRenderer(i));
@@ -70,8 +71,7 @@ public class OrbitHandler : MonoBehaviour {
             W = w - O;
         else
             W = w;
-        
-
+ 
         //Gets E and True Anomaly
         eccentricAnomaly = GetEccentricAnomaly(meanAnomaly, e);
         trueAnomaly = GetTrueAnomaly(e, eccentricAnomaly) * Mathf.Deg2Rad;
@@ -89,26 +89,25 @@ public class OrbitHandler : MonoBehaviour {
             o.y * (Math.Cos(W) * Math.Cos(inc) * Math.Cos(O) - Math.Sin(W) * Math.Sin(O)));
         rz = (o.x * (Math.Sin(W) * Math.Sin(inc)) + o.y * (Math.Cos(W) * Math.Sin(inc)));
 
-        return new Vector3((float)rx * BodyController.auMultiplier, (float) rz * BodyController.auMultiplier, (float) ry * BodyController.auMultiplier);
+        return new Vector3((float) rx * BodyController.auMultiplier, (float) rz * BodyController.auMultiplier, (float) ry * BodyController.auMultiplier);
     }
 
     private double GetTrueAnomaly(double e, double E)
     {
-        int dp = 6;
         double phi = Math.Atan2(Math.Sqrt(1 - e) * Math.Cos(E / 2), Math.Sqrt(1 + e) * Math.Sin(E / 2)) / (Math.PI / 180);
 
-        return Math.Round(phi * Math.Pow(10, dp)) / Math.Pow(10, dp);
+        return Math.Round(phi * Math.Pow(10, orbitTolerance)) / Math.Pow(10, orbitTolerance);
     }
 
     private double GetEccentricAnomaly(double meanAnomaly, double e)
     {
         //Solve kepler equation to get Ecentric anomaly
-        int tolerance = 6;
+        
         int maxIter = 30, i = 0;
-        double delta = Math.Pow(10, -tolerance);
+        double delta = Math.Pow(10, -orbitTolerance);
         double E, Function;
 
-        meanAnomaly /= 360.0f;
+        meanAnomaly /= 180.0f;
 
         meanAnomaly = 2.0 * Math.PI * (meanAnomaly - Math.Floor(meanAnomaly));
 
@@ -121,7 +120,6 @@ public class OrbitHandler : MonoBehaviour {
 
         while ((Math.Abs(Function) > delta) && (i < maxIter))
         {
-
             E = E - Function / (1.0 - e * Math.Cos(E));
             Function = E - e * Math.Sin(E) - meanAnomaly;
             i++;
@@ -129,6 +127,6 @@ public class OrbitHandler : MonoBehaviour {
 
         E /= (Math.PI / 180.0);
 
-        return Math.Round(E * Math.Pow(10, tolerance)) / Math.Pow(10, tolerance);
+        return Math.Round(E * Math.Pow(10, orbitTolerance)) / Math.Pow(10, orbitTolerance);
     }
 }

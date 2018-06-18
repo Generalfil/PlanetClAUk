@@ -189,6 +189,12 @@ public class JPLConnect {
         for (int i = 0; i < _commands.Length; i++)
         {
             Debug.Log("Entered Command Loop");
+            while (true)
+            {
+                if (networkStream.DataAvailable)
+                    Debug.Log("Data in stream");
+                    break;
+            }
             Thread.Sleep(10);
             write(_commands[i]);
             Thread.Sleep(10);
