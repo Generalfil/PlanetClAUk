@@ -36,7 +36,7 @@ public class BodyController : MonoBehaviour {
         UpdateActiveBodies(saveLoad.GetLoadedBodies());
 
         //Contact Nasa
-        AccessJPLHorizon();
+        //AccessJPLHorizon();
     }
 
     // Update is called once per frame
