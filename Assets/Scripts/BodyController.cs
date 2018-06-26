@@ -10,7 +10,7 @@ public class BodyController : MonoBehaviour {
     private List<GameObject> activeBodies = new List<GameObject>();
     private SaveLoad saveLoad;
 
-    public List<OrbitalBody> orbitalBodyData = new List<OrbitalBody>();
+    public List<BodySaveData> orbitalBodyData = new List<BodySaveData>();
 
     //Sets modfier for AU scale. Default: 10 (1 unit in Unity = 0.1 AU) 
     public static int auMultiplier = 10;
@@ -36,7 +36,7 @@ public class BodyController : MonoBehaviour {
         UpdateActiveBodies(saveLoad.GetLoadedBodies());
 
         //Contact Nasa
-        //AccessJPLHorizon();
+        AccessJPLHorizon();
     }
 
     // Update is called once per frame
@@ -72,8 +72,6 @@ public class BodyController : MonoBehaviour {
     /// <summary>
     /// Method to update all bodies in scene
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="m_bodyRefrence"></param>
     private void UpdateActiveBodies<T>(List<T> m_bodyRefrence)
     {
         Debug.Log("Trying to update active bodies");

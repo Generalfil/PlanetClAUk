@@ -4,13 +4,7 @@ using UnityEngine;
 
 public class OrbitalCamera : MonoBehaviour {
 
-    private Transform CameraObj;
-    private Transform CameraTarget;
-    private Vector3 _LocalRotation;
-    private Vector3 startVector;
-    private Vector3 hitVector;
-    private float CameraZoom = 10f;
-    private bool moveCamera = false;
+    public static float currentCameraZoom = 10f;
 
     public float MouseSensitivityX;
     public float MouseSensitivityY;
@@ -21,6 +15,13 @@ public class OrbitalCamera : MonoBehaviour {
     public float PlanetZoom;
     public bool CameraDisabled = false;
 
+    private Transform CameraObj;
+    private Transform CameraTarget;
+    private Vector3 _LocalRotation;
+    private Vector3 startVector;
+    private Vector3 hitVector;
+    private bool moveCamera = false;
+    private bool CameraMoveZoom = false;
 
 
     // Use this for initialization
@@ -43,6 +44,7 @@ public class OrbitalCamera : MonoBehaviour {
                 {
                     hitVector = hit.transform.position;
                     moveCamera = true;
+                    CameraMoveZoom = true;
                 }
             }
         }
@@ -51,9 +53,22 @@ public class OrbitalCamera : MonoBehaviour {
         {
             startVector = CameraTarget.position;
             CameraTarget.position = Vector3.Lerp(startVector, hitVector, Time.deltaTime * ScrollDampening);
-            CameraObj.localPosition = new Vector3(0f, 0f, Mathf.Lerp(CameraObj.localPosition.z, PlanetZoom * -1f, Time.deltaTime * ScrollDampening));
+
+            if (Vector3.Distance(CameraTarget.position, hitVector) > 1)
+            { 
+                CameraObj.localPosition = new Vector3(0f, 0f, Mathf.Lerp(CameraObj.localPosition.z, PlanetZoom * -1f, Time.deltaTime * ScrollDampening));
+                currentCameraZoom = -CameraObj.localPosition.z;
+            }
+            else
+            {
+                CameraMoveZoom = false;
+            }
+
             if (CameraTarget.position == hitVector)
+            {
+                Debug.Log("movedone");
                 moveCamera = false;
+            }
         }
     }
     void LateUpdate()
@@ -84,11 +99,11 @@ public class OrbitalCamera : MonoBehaviour {
             {
                 float ScrollAmount = Input.GetAxis("Mouse ScrollWheel") * ScrollSensitvity;
 
-                ScrollAmount *= (CameraZoom * 0.3f);
+                ScrollAmount *= (currentCameraZoom * 0.3f);
 
-                CameraZoom += ScrollAmount * -1f;
+                currentCameraZoom += ScrollAmount * -1f;
 
-                CameraZoom = Mathf.Clamp(CameraZoom, 5f, MaxZoomValue);
+                currentCameraZoom = Mathf.Clamp(currentCameraZoom, 5f, MaxZoomValue);
             }
         }
 
@@ -96,9 +111,9 @@ public class OrbitalCamera : MonoBehaviour {
         Quaternion QT = Quaternion.Euler(_LocalRotation.y, _LocalRotation.x, 0);
         CameraTarget.rotation = Quaternion.Lerp(CameraTarget.rotation, QT, Time.deltaTime * OrbitDampening);
 
-        if (CameraObj.localPosition.z != CameraZoom * -1f)
+        if (CameraObj.localPosition.z != currentCameraZoom * -1f && !CameraMoveZoom)
         {
-            CameraObj.localPosition = new Vector3(0f, 0f, Mathf.Lerp(CameraObj.localPosition.z, CameraZoom * -1f, Time.deltaTime * ScrollDampening));
+            CameraObj.localPosition = new Vector3(0f, 0f, Mathf.Lerp(CameraObj.localPosition.z, currentCameraZoom * -1f, Time.deltaTime * ScrollDampening));
         }
     }
 }

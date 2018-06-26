@@ -13,14 +13,14 @@ public class JPLConnect {
     private DateTime today;
     private DateTime tomorrow;
     private List<string> m_bodiesToAccess;
-    private List<OrbitalBody> oribtalBodies;
+    private List<BodySaveData> oribtalBodies;
 
     public bool clientDone = false;
     private string startingBody;
 
     public JPLConnect()
     {
-        oribtalBodies = new List<OrbitalBody>();
+        oribtalBodies = new List<BodySaveData>();
     }
 
     private void OnApplicationExit()
@@ -28,7 +28,7 @@ public class JPLConnect {
         readWriteThread.Abort();
     }
 
-    public List<OrbitalBody> GetBodyList()
+    public List<BodySaveData> GetBodyList()
     {
         return oribtalBodies;
     }
@@ -139,7 +139,7 @@ public class JPLConnect {
     /// Accesses orbital body through horizons and extracts ephemeris into vars and returns those vars into a double[]
     /// </summary>
     /// <param name="id"></param>
-    public OrbitalBody AccessBody(string id)
+    public BodySaveData AccessBody(string id)
     {
         string[] initCommands = new string[] { "e", "v", "500@0", "y", "eclip", today.ToString(), tomorrow.ToString(), "1d", "y", "1", "n" };
         string[] followUpCommands = new string[] { "e+", "n" };
@@ -176,7 +176,7 @@ public class JPLConnect {
         //Split into Vars
         bodyChar = SplitIntoVars(m_stringholder);
 
-        OrbitalBody orbitalBody = new OrbitalBody(id, bodyChar[0], bodyChar[1], bodyChar[2]);
+        BodySaveData orbitalBody = new BodySaveData(id, bodyChar[0], bodyChar[1], bodyChar[2], today.ToString());
         Debug.Log(id + " body done");
 
         return orbitalBody;

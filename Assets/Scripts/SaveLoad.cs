@@ -44,9 +44,6 @@ public class SaveLoad : MonoBehaviour {
             }
 
             Debug.Log("Loaded BodyData");
-            //BodySaveData loadedData = JsonUtility.FromJson<BodySaveData>(dataAsJson);
-
-            // Retrieve the allRoundData property of loadedData
         }
         else
         {
@@ -54,14 +51,30 @@ public class SaveLoad : MonoBehaviour {
         }
     }
 
-    
+    //Barely Used but kept for compatibility
+    /*
     public void SaveOrbitalBodies(List<OrbitalBody> objToSave)
     {
         StringBuilder sb = new StringBuilder();
 
         foreach (var item in objToSave)
         {
-            var saveObj = new BodySaveData(item.ID, item.X_value, item.Y_value, item.Z_value);
+            var saveObj = new BodySaveData(item.ID, item.X_value, item.Y_value, item.Z_value , item.Data_Date //if used again fix);
+            sb.Append(JsonUtility.ToJson(saveObj));
+        }
+
+        string filePath = Application.dataPath + gameDataFileName;
+        File.WriteAllText(filePath, sb.ToString());
+    }
+    */
+
+    public void SaveOrbitalBodies(List<BodySaveData> objToSave)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        foreach (var item in objToSave)
+        {
+            var saveObj = new BodySaveData(item.ID, item.X_value, item.Y_value, item.Z_value, item.Data_Date);
             sb.Append(JsonUtility.ToJson(saveObj));
         }
 
