@@ -62,10 +62,49 @@ public class BodyController : MonoBehaviour {
             Debug.Log("Started update");
             AccessJPLHorizon();
         }
-        if (canUpdate && Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Jump"))
         {
-            Debug.Log("Try save");
-            saveLoad.SaveOrbitalBodies(orbitalBodyData);
+            Debug.Log("Returned pos");
+            foreach (var item in activeBodies)
+            {
+                item.GetComponent<OrbitalBody>()
+                    .SetObjectPosition();
+            }
+
+        }
+        if (Input.GetButtonDown("Fire1"))
+        {
+            GameObject[] orbitObjs = GameObject.FindGameObjectsWithTag("Orbit");
+
+            foreach(var orbitObj in orbitObjs)
+            {
+                OrbitHandler orbitHandler = orbitObj.GetComponent<OrbitHandler>();
+                Vector3[] orbitV3s = new Vector3[orbitHandler.resolution];
+                var lr = orbitObj.GetComponent<LineRenderer>();
+                GameObject orbitalBody = GameObject.Find(orbitHandler.ID.ToString());
+
+                for (int i = 0; i < orbitHandler.resolution; i++)
+                {
+                    orbitV3s[i] = lr.GetPosition(i);
+                }
+
+                Vector3 tMin = orbitalBody.transform.position;
+                float minDist = Mathf.Infinity;
+                Vector3 currentPos = orbitalBody.transform.position;
+                foreach (Vector3 t in orbitV3s)
+                {
+                    float dist = Vector3.Distance(t, currentPos);
+                    if (dist < minDist)
+                    {
+                        tMin = t;
+                        minDist = dist;
+                    }
+                }
+
+                orbitalBody.transform.position = tMin;
+
+                Debug.Log("updated pos for " + orbitHandler.ID.ToString());
+            }  
         }
     }
 

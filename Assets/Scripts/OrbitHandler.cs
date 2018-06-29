@@ -9,6 +9,8 @@ public class OrbitHandler : MonoBehaviour {
 
     public int resolution = 50;
 
+    public short ID;
+
     //public double mAnomaly;
     public double semiMajorAxis;
     public double eccentrity;
@@ -40,7 +42,7 @@ public class OrbitHandler : MonoBehaviour {
         lr.positionCount = resolution + 2;
 
         lr.SetPosition(0,AddPointToLineRenderer(0));
-        for (int i = 1; i <= resolution + 1; i++)
+        for (int i = 1; i <= resolution + 1; i++ /*i += (int)Mathf.Round(360/resolution)*/)
         {
             lr.SetPosition(i, AddPointToLineRenderer(i));
         }
