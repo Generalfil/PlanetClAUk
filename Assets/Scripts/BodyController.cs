@@ -57,7 +57,7 @@ public class BodyController : MonoBehaviour {
         }
 
         //Temp update function
-        if (canUpdate && Input.GetButtonDown("Jump"))
+        /*if (canUpdate && Input.GetButtonDown("Jump"))
         {
             Debug.Log("Started update");
             AccessJPLHorizon();
@@ -74,37 +74,45 @@ public class BodyController : MonoBehaviour {
         }
         if (Input.GetButtonDown("Fire1"))
         {
-            GameObject[] orbitObjs = GameObject.FindGameObjectsWithTag("Orbit");
+            AlignOrbits();
+        }*/
+    }
 
-            foreach(var orbitObj in orbitObjs)
+    /// <summary>
+    /// Method to align orbitalbodies to their respective orbithandler
+    /// </summary>
+    private void AlignOrbits()
+    {
+        GameObject[] orbitObjs = GameObject.FindGameObjectsWithTag("Orbit");
+
+        foreach (var orbitObj in orbitObjs)
+        {
+            OrbitHandler orbitHandler = orbitObj.GetComponent<OrbitHandler>();
+            Vector3[] orbitV3s = new Vector3[orbitHandler.resolution];
+            var lr = orbitObj.GetComponent<LineRenderer>();
+            GameObject orbitalBody = GameObject.Find(orbitHandler.ID.ToString());
+
+            for (int i = 0; i < orbitHandler.resolution; i++)
             {
-                OrbitHandler orbitHandler = orbitObj.GetComponent<OrbitHandler>();
-                Vector3[] orbitV3s = new Vector3[orbitHandler.resolution];
-                var lr = orbitObj.GetComponent<LineRenderer>();
-                GameObject orbitalBody = GameObject.Find(orbitHandler.ID.ToString());
+                orbitV3s[i] = lr.GetPosition(i);
+            }
 
-                for (int i = 0; i < orbitHandler.resolution; i++)
+            Vector3 tMin = orbitalBody.transform.position;
+            float minDist = Mathf.Infinity;
+            Vector3 currentPos = orbitalBody.transform.position;
+            foreach (Vector3 t in orbitV3s)
+            {
+                float dist = Vector3.Distance(t, currentPos);
+                if (dist < minDist)
                 {
-                    orbitV3s[i] = lr.GetPosition(i);
+                    tMin = t;
+                    minDist = dist;
                 }
+            }
 
-                Vector3 tMin = orbitalBody.transform.position;
-                float minDist = Mathf.Infinity;
-                Vector3 currentPos = orbitalBody.transform.position;
-                foreach (Vector3 t in orbitV3s)
-                {
-                    float dist = Vector3.Distance(t, currentPos);
-                    if (dist < minDist)
-                    {
-                        tMin = t;
-                        minDist = dist;
-                    }
-                }
+            orbitalBody.transform.position = tMin;
 
-                orbitalBody.transform.position = tMin;
-
-                Debug.Log("updated pos for " + orbitHandler.ID.ToString());
-            }  
+            //Debug.Log("updated pos for " + orbitHandler.ID.ToString());
         }
     }
 
@@ -133,11 +141,13 @@ public class BodyController : MonoBehaviour {
                 
                 activeBodies[i].GetComponent<OrbitalBody>()
                     .SetObjectPosition();
+
+                AlignOrbits();
             }
             catch
             {
                 Debug.Log("Cant update component on: " + activeBodies[i].name);
-                activeBodies[i].SetActive(false);
+                //activeBodies[i].SetActive(false);
             }
         }
     }

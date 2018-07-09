@@ -39,20 +39,35 @@ public class OrbitHandler : MonoBehaviour {
         if (lr == null)
             lr = GetComponent<LineRenderer>();
 
-        lr.positionCount = resolution + 2;
-
+        /* DEBUG RESOLUTION CODE
+        lr.positionCount = (resolution *2)  + 2;
         lr.SetPosition(0,AddPointToLineRenderer(0));
-        for (int i = 1; i <= resolution + 1; i++ /*i += (int)Mathf.Round(360/resolution)*/)
+
+        for (int i = 1; i <=resolution + 1; i +=2)
         {
             lr.SetPosition(i, AddPointToLineRenderer(i));
+            lr.SetPosition(i+1, new Vector3(0,0,0));
+        */
+
+        //Setup
+        lr.positionCount = resolution + 2;
+        lr.SetPosition(0,AddPointToLineRenderer(0));
+
+        for (int i = 1; i <=resolution + 1; i ++)
+        {
+            lr.SetPosition(i, AddPointToLineRenderer(i));
+
+            //Just to be safe phi dont go crazy
+            if (trueAnomaly >= Math.PI)
+            {
+                break;
+            }
         }
     }
 
     Vector3 AddPointToLineRenderer(float index)
     {
-        Vector3 pointPosition;
-
-        pointPosition = KeplerToCarthesian(index * Mathf.Deg2Rad , semiMajorAxis,eccentrity,LongitudeofP,longOfAccNode, inclination);
+        Vector3 pointPosition = KeplerToCarthesian(index * Mathf.Deg2Rad , semiMajorAxis, eccentrity, LongitudeofP, longOfAccNode, inclination);
 
         return pointPosition;        
     }
@@ -89,7 +104,8 @@ public class OrbitHandler : MonoBehaviour {
                 o.y * (Math.Sin(W) * Math.Cos(O) + Math.Cos(W) * Math.Cos(inc) * Math.Sin(O)));
         ry = (o.x * (Math.Cos(W) * Math.Sin(O) + Math.Sin(W) * Math.Cos(inc) * Math.Cos(O)) +
             o.y * (Math.Cos(W) * Math.Cos(inc) * Math.Cos(O) - Math.Sin(W) * Math.Sin(O)));
-        rz = (o.x * (Math.Sin(W) * Math.Sin(inc)) + o.y * (Math.Cos(W) * Math.Sin(inc)));
+        rz = (o.x * (Math.Sin(W) * Math.Sin(inc)) + 
+            o.y * (Math.Cos(W) * Math.Sin(inc)));
 
         return new Vector3((float) rx * BodyController.auMultiplier, (float) rz * BodyController.auMultiplier, (float) ry * BodyController.auMultiplier);
     }
@@ -109,7 +125,7 @@ public class OrbitHandler : MonoBehaviour {
         double delta = Math.Pow(10, -orbitTolerance);
         double E, Function;
 
-        meanAnomaly /= 180.0f;
+        meanAnomaly /= resolution/2;
 
         meanAnomaly = 2.0 * Math.PI * (meanAnomaly - Math.Floor(meanAnomaly));
 

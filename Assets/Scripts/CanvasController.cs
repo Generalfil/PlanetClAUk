@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CanvasController : MonoBehaviour {
 
-    Camera camera;
+    Camera camera = null;
 
     private float startScaleX;
     private float startScaleY;
