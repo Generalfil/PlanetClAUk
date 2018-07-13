@@ -70,6 +70,7 @@
     <Compile Include="Assets\Scripts\OrbitHandler.cs" />
     <Compile Include="Assets\Scripts\SaveLoad.cs" />
     <Compile Include="Assets\Scripts\SpinningCube.cs" />
+    <None Include="Assets\Materials\EarthShader.shader" />
     <Reference Include="UnityEditor.StandardEvents">
       <HintPath>C:/Users/filip/Documents/PlanetClAUk/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
     </Reference>

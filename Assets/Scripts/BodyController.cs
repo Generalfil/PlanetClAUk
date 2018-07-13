@@ -57,11 +57,12 @@ public class BodyController : MonoBehaviour {
         }
 
         //Temp update function
-        /*if (canUpdate && Input.GetButtonDown("Jump"))
+        if (canUpdate && Input.GetButtonDown("Jump") && Input.GetButtonDown("Fire1")) 
         {
             Debug.Log("Started update");
             AccessJPLHorizon();
         }
+        /*
         if (Input.GetButtonDown("Jump"))
         {
             Debug.Log("Returned pos");
