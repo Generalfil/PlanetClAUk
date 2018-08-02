@@ -16,9 +16,10 @@ public class BodyController : MonoBehaviour {
     public static int auMultiplier = 10;
 
     public bool canUpdate = false;
+	public bool tempUpdate = false;
 
-    // Use this for initialization
-    void Start () {
+	// Use this for initialization
+	void Start () {
         
     }
 
@@ -57,10 +58,11 @@ public class BodyController : MonoBehaviour {
         }
 
         //Temp update function
-        if (canUpdate && Input.GetButtonDown("Jump") && Input.GetButtonDown("Fire1")) 
+        if (tempUpdate) 
         {
-            Debug.Log("Started update");
+            Debug.Log("Started debug update");
             AccessJPLHorizon();
+			tempUpdate = false;
         }
         /*
         if (Input.GetButtonDown("Jump"))
