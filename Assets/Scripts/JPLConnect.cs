@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Net.Sockets;
 using UnityEngine;
+using System.Diagnostics;
 
 public class JPLConnect {
 
@@ -14,9 +15,10 @@ public class JPLConnect {
     private DateTime tomorrow;
     private List<string> m_bodiesToAccess;
     private List<BodySaveData> oribtalBodies;
+    private float TimeoutPerBody = 5f;
+    private string startingBody;
 
     public bool clientDone = false;
-    private string startingBody;
 
     public JPLConnect()
     {
@@ -41,13 +43,13 @@ public class JPLConnect {
         try
         {
             client = new TcpClient(ip, port);
-            Debug.Log("Connected to server.");
+            UnityEngine.Debug.Log("Connected to server.");
             today = DateTime.Now;
             tomorrow = today.AddDays(1);
         }
         catch (SocketException)
         {
-            Debug.Log("Failed to connect to server");
+            UnityEngine.Debug.Log("Failed to connect to server");
             return;
         }
 
@@ -55,83 +57,92 @@ public class JPLConnect {
         networkStream = client.GetStream();
 
         //start socket Read/write thread
-        readWriteThread = new Thread(readWrite);
+        readWriteThread = new Thread(JplThread);
         readWriteThread.Start();
-
     }
 
-    private void readWrite()
+    private void JplThread()
     {
-        string command, recieved;
+        string /*command,*/ recieved;
         bool title = false;
 
         //Read first thing given
-        recieved = Read();
-        Debug.Log(recieved);
+        recieved = JplRead();
+        UnityEngine.Debug.Log(recieved);
+        //Set up mainmenu
+        SetupMainMenu(ref recieved, ref title);
 
         //Set up connection loop
+        while (true)
+        { 
+            try
+            {
+                //Accesses bodies
+                foreach (var body in m_bodiesToAccess)
+                {
+                    short planet_timeout = 50;
+                    for (int attempts = 0; attempts < 3; attempts++)
+                    {
+                        Thread.Sleep(planet_timeout);
+                        try
+                        {
+                            oribtalBodies.Add(AccessBody(body));
+                            Thread.Sleep(planet_timeout);
+                            break;
+                        }
+                        catch
+                        {
+                            planet_timeout += 50;
+                            UnityEngine.Debug.Log("Failed To Access:" + body + "Attempt:" + attempts + "Retrying:");
+                            Thread.Sleep(planet_timeout);
+                        }
+                    }
+                }
+
+                break;
+            }
+            catch
+            {
+                UnityEngine.Debug.Log("Failed to get orbitalbodies, ending connection");
+                break;
+            }
+               
+            
+            //Old debug code, unreachable for now
+            /*JplWrite(command);
+            Thread.Sleep(300);
+            recieved = JplRead();
+
+            Debug.Log(recieved);*/
+        }
+
+        UnityEngine.Debug.Log("Disconnected from server");
+        networkStream.Close();
+        client.Close();
+        clientDone = true;
+    }
+
+    private void SetupMainMenu(ref string recieved, ref bool title)
+    {
+        string command;
         while (true)
         {
             //Check if at main menu
             if (recieved == "\r\nHorizons> ")
             {
                 title = true;
-                Debug.Log("Accessed Horizons");
+                break;
             }
 
             //If not at main menu, send empty command
             if (!title)
             {
                 command = "";
+                JplWrite(command);
             }
-            else
-            {
-                try
-                {
-                    //Accesses bodies
-                    foreach (var body in m_bodiesToAccess)
-                    {
-                        short planet_timeout = 50;
-                        for (int attempts = 0; attempts < 5; attempts++)
-                        {
-                            Thread.Sleep(planet_timeout);
-                            try
-                            {
-                                oribtalBodies.Add(AccessBody(body));
-                                recieved = Read();
-                                Thread.Sleep(planet_timeout);
-                                break;
-                            }
-                            catch
-                            {
-                                planet_timeout += 50;
-                                Debug.Log("Failed To Access:" + body + "Attempt:" + attempts + "Retrying:");
-                                Thread.Sleep(planet_timeout);
-                            }
-                        }
-                    }
 
-                    break;
-                }
-                catch
-                {
-                    Debug.Log("Failed to get orbitalbodies, ending connection");
-                    break;
-                }
-               
-            }
-            
-            write(command);
-            Thread.Sleep(300);
-            recieved = Read();
-
-            Debug.Log(recieved);
+            recieved = JplRead();
         }
-
-        Debug.Log("Disconnected from server");
-        networkStream.Close();
-        client.Close();
-        clientDone = true;
     }
 
 
@@ -147,11 +158,10 @@ public class JPLConnect {
         StringBuilder sb = new StringBuilder();
         string m_stringholder;
 
-
-        Debug.Log("Starting Body" + id);
+        UnityEngine.Debug.Log("Starting Body" + id);
         //Send body ID
-        write(id);
-        sb.Append(Read());
+        JplWrite(id);
+        sb.Append(JplRead());
 
         if (id == startingBody)
         {
@@ -171,13 +181,13 @@ public class JPLConnect {
 
         //Split into only today and it X Y Z sections
         m_stringholder = sub.Substring(sub.IndexOf("X"), sub.IndexOf("\r\n VX") - sub.IndexOf("X"));
-        Debug.Log("Ephemeris done");
+        UnityEngine.Debug.Log("Ephemeris done");
 
         //Split into Vars
         bodyChar = SplitIntoVars(m_stringholder);
 
         BodySaveData orbitalBody = new BodySaveData(id, bodyChar[0], bodyChar[1], bodyChar[2], today.ToString());
-        Debug.Log(id + " body done");
+        UnityEngine.Debug.Log(id + " body done");
 
         return orbitalBody;
     }
@@ -185,23 +195,38 @@ public class JPLConnect {
     private string SendCommandsForBody(StringBuilder sb, string[] _commands)
     {
         string m_stringholder;
+        Stopwatch stopwatch = new Stopwatch();
+        TimeSpan timeSpan = TimeSpan.Zero;
         //Send Command loop
         for (int i = 0; i < _commands.Length; i++)
         {
-            Debug.Log("Entered Command Loop");
-            while (true)
-            {
-                if (networkStream.DataAvailable)
-                    Debug.Log("Data in stream");
-                    break;
-            }
+            //UnityEngine.Debug.Log("Command-Loop");
             Thread.Sleep(10);
-            write(_commands[i]);
+            JplWrite(_commands[i]);
             Thread.Sleep(10);
-            sb.Append(Read());
+            sb.Append(JplRead());
         }
-        Debug.Log("Exits Command loop");
-        sb.Append(Read());
+
+        stopwatch.Start();
+
+        while (true)
+        {
+            sb.Append(JplRead());
+            Thread.Sleep(10);
+            timeSpan += stopwatch.Elapsed;
+            if (sb.ToString().Contains("$$EOE"))
+            {
+                UnityEngine.Debug.Log("Empheris found after: " + timeSpan.Milliseconds.ToString());
+                break;
+            }
+            if (timeSpan.Seconds > TimeoutPerBody)
+            {
+                UnityEngine.Debug.Log("Timneout reached, retrying");
+                break;
+            }
+        }
+        UnityEngine.Debug.Log("Exits Command loop");
+        sb.Append(JplRead());
         m_stringholder = sb.ToString();
         return m_stringholder;
     }
@@ -209,7 +234,6 @@ public class JPLConnect {
     /// <summary>
     /// Splits a string into x y z decimals, these are converted to a double
     /// </summary>
-    /// <param name="m_stringholder"></param>
     private double[] SplitIntoVars(string m_stringholder)
     {
         double[] m_bodyChar = new double[3];
@@ -233,15 +257,14 @@ public class JPLConnect {
 
             m_bodyChar[i - 1] = (double)Decimal.Parse(m_split, System.Globalization.NumberStyles.Float);
         }
-        Debug.Log("Converted to vars");
+        UnityEngine.Debug.Log("Converted to vars");
         return m_bodyChar;
     }
 
     /// <summary>
     /// Converts message string into bytes and then sends them to JPL
     /// </summary>
-    /// <param name="message"></param>
-    public void write(string message)
+    public void JplWrite(string message)
     {
         message += Environment.NewLine;
         byte[] messageBytes = Encoding.ASCII.GetBytes(message);
@@ -253,8 +276,7 @@ public class JPLConnect {
     /// <summary>
     /// Reads network stream, has a buffer of 1024 bytes but reads all data through networkStream.DataAvailable
     /// </summary>
-    /// <returns></returns>
-    public string Read()
+    public string JplRead()
     {
         byte[] data = new byte[1024];
         StringBuilder recieved = new StringBuilder();

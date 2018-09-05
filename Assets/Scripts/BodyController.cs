@@ -37,7 +37,7 @@ public class BodyController : MonoBehaviour {
         UpdateActiveBodies(saveLoad.GetLoadedBodies());
 
         //Contact Nasa
-        //AccessJPLHorizon();
+        AccessJPLHorizon();
     }
 
     // Update is called once per frame
@@ -64,7 +64,7 @@ public class BodyController : MonoBehaviour {
             AccessJPLHorizon();
 			tempUpdate = false;
         }
-        /*
+        
         if (Input.GetButtonDown("Jump"))
         {
             Debug.Log("Returned pos");
@@ -75,6 +75,7 @@ public class BodyController : MonoBehaviour {
             }
 
         }
+        /*
         if (Input.GetButtonDown("Fire1"))
         {
             AlignOrbits();
