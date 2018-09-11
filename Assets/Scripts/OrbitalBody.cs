@@ -11,6 +11,8 @@ public class OrbitalBody : MonoBehaviour
     private Vector3 cScale;
     private const float BodyScaleDivider = 0.1f;
 
+    LineRenderer lr;
+
     public string ID
     {
         get { return m_id; }
@@ -76,8 +78,29 @@ public class OrbitalBody : MonoBehaviour
 
     private void Update()
     {
-        //gameObject.transform.localScale = new Vector3(Mathf.Clamp(cScale.x * OrbitalCamera.currentCameraZoom * BodyScaleDivider, cScale.x, cScale.x*2),
-        //    Mathf.Clamp(cScale.y * OrbitalCamera.currentCameraZoom * BodyScaleDivider, cScale.y, cScale.y * 2),
-         //   Mathf.Clamp(cScale.z * OrbitalCamera.currentCameraZoom * BodyScaleDivider, cScale.z, cScale.z * 2));
+        /*gameObject.transform.localScale = new Vector3(Mathf.Clamp(cScale.x * Mathf.Exp(OrbitalCamera.currentCameraZoom/10 * BodyScaleDivider), cScale.x, cScale.x*10),
+            Mathf.Clamp(cScale.y * Mathf.Exp(OrbitalCamera.currentCameraZoom/10 * BodyScaleDivider), cScale.y, cScale.y * 10),
+            Mathf.Clamp(cScale.z * Mathf.Exp(OrbitalCamera.currentCameraZoom/10 * BodyScaleDivider), cScale.z, cScale.z * 10));*/
+        if (this.ID == "399")
+        {
+            if (lr == null)
+                lr = GetComponent<LineRenderer>();
+            lr.positionCount = 2;
+            lr.SetPositions(new Vector3[2] {new Vector3(0,0,0), transform.position });
+            //transform.rotation = RotateOrbitalBody(transform.rotation);
+        }
+
+        
+        
+    }
+
+    private Quaternion RotateOrbitalBody(Quaternion orgRotation)
+    {
+        var now = DateTime.UtcNow;
+        float currentMinute = ((now.Hour * 60 + now.Minute)/360f)+180;
+
+        orgRotation = Quaternion.Euler(-23.439f, -currentMinute ,0 ); 
+
+        return orgRotation;
     }
 }

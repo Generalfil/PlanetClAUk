@@ -37,12 +37,11 @@ public class BodyController : MonoBehaviour {
         UpdateActiveBodies(saveLoad.GetLoadedBodies());
 
         //Contact Nasa
-        AccessJPLHorizon();
+        //AccessJPLHorizon();
     }
 
     // Update is called once per frame
     void Update () {
-
         if (jplConnect.clientDone)
         {
             orbitalBodyData = jplConnect.GetBodyList();
@@ -161,5 +160,3 @@ public class BodyController : MonoBehaviour {
         jplConnect.ServerSocket("horizons.jpl.nasa.gov", 6775, bodiesToAccess);
     }
 }
-
-
