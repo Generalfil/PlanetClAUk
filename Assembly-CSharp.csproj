@@ -68,6 +68,7 @@
     <Compile Include="Assets\Scripts\OrbitalBody.cs" />
     <Compile Include="Assets\Scripts\OrbitalCamera.cs" />
     <Compile Include="Assets\Scripts\OrbitHandler.cs" />
+    <Compile Include="Assets\Scripts\RotateRenderer.cs" />
     <Compile Include="Assets\Scripts\SaveLoad.cs" />
     <Compile Include="Assets\Scripts\SpinningCube.cs" />
     <None Include="Assets\Materials\EarthShader.shader" />
