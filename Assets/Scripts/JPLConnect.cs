@@ -71,7 +71,6 @@ public class JPLConnect {
         UnityEngine.Debug.Log(recieved);
         //Set up mainmenu
         SetupMainMenu(ref recieved, ref title);
-
         //Set up connection loop
         while (true)
         { 

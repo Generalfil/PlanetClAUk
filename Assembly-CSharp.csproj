@@ -64,6 +64,7 @@
     <Compile Include="Assets\Scripts\BodyController.cs" />
     <Compile Include="Assets\Scripts\BodySaveData.cs" />
     <Compile Include="Assets\Scripts\CanvasController.cs" />
+    <Compile Include="Assets\Scripts\EventManager.cs" />
     <Compile Include="Assets\Scripts\JPLConnect.cs" />
     <Compile Include="Assets\Scripts\LoadingTextHandler.cs" />
     <Compile Include="Assets\Scripts\OrbitalBody.cs" />

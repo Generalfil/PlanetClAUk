@@ -38,6 +38,7 @@ public class BodyController : MonoBehaviour {
 
         //Contact Nasa
         //AccessJPLHorizon();
+        EventManager.TriggerEvent("Start");
     }
 
     // Update is called once per frame
