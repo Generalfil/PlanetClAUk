@@ -49,17 +49,21 @@ public class OrbitalBody : MonoBehaviour
         cScale = transform.localScale;
     }
 
-    //Barely Used
-    public void SetBodyReference(OrbitalBody o)
+	/// <summary>
+	/// SetBodyReference to OrbitalBody is barely used, please use BodySaveData instead
+	/// </summary>
+	public void SetBodyReference(OrbitalBody o)
     {
         m_id = o.ID;
         m_x_value = o.X_value;
         m_y_value = o.Y_value;
         m_z_value = o.Z_value;
-        m_data_date = o.Data_Date;
-        cScale = transform.localScale;
+        m_data_date = DateTime.Parse(o.Data_Date.ToString());
+		cScale = transform.localScale;
     }
-
+	/// <summary>
+	/// Sets OrbitalBody values to BodySaveData (Serialized, saveable data)
+	/// </summary>
     public void SetBodyReference(BodySaveData o)
     {
         m_id = o.ID;

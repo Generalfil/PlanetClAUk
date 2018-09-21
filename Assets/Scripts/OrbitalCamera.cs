@@ -15,8 +15,8 @@ public class OrbitalCamera : MonoBehaviour {
     public float PlanetZoom;
     public bool CameraDisabled = false;
 
-    private Transform CameraObj;
-    private Transform CameraTarget;
+    private Transform cameraObj;
+    private Transform cameraTarget;
     private Vector3 _LocalRotation;
     private Vector3 startVector;
     private Vector3 hitVector;
@@ -27,8 +27,8 @@ public class OrbitalCamera : MonoBehaviour {
     // Use this for initialization
     void Start()
     {
-        CameraObj = transform;
-        CameraTarget = transform.parent;
+        cameraObj = transform;
+        cameraTarget = transform.parent;
     }
 
     void Update()
@@ -51,20 +51,20 @@ public class OrbitalCamera : MonoBehaviour {
 
         if (moveCamera)
         {
-            startVector = CameraTarget.position;
-            CameraTarget.position = Vector3.Lerp(startVector, hitVector, Time.deltaTime * ScrollDampening);
+            startVector = cameraTarget.position;
+            cameraTarget.position = Vector3.Lerp(startVector, hitVector, Time.deltaTime * ScrollDampening);
 
-            if (Vector3.Distance(CameraTarget.position, hitVector) > 1)
+            if (Vector3.Distance(cameraTarget.position, hitVector) > 1)
             { 
-                CameraObj.localPosition = new Vector3(0f, 0f, Mathf.Lerp(CameraObj.localPosition.z, PlanetZoom * -1f, Time.deltaTime * ScrollDampening));
-                currentCameraZoom = -CameraObj.localPosition.z;
+                cameraObj.localPosition = new Vector3(0f, 0f, Mathf.Lerp(cameraObj.localPosition.z, PlanetZoom * -1f, Time.deltaTime * ScrollDampening));
+                currentCameraZoom = -cameraObj.localPosition.z;
             }
             else
             {
                 CameraMoveZoom = false;
             }
 
-            if (CameraTarget.position == hitVector)
+            if (cameraTarget.position == hitVector)
             {
                 Debug.Log("movedone");
                 moveCamera = false;
@@ -109,11 +109,11 @@ public class OrbitalCamera : MonoBehaviour {
 
         //Actual Camera Rig Transformations
         Quaternion QT = Quaternion.Euler(_LocalRotation.y, _LocalRotation.x, 0);
-        CameraTarget.rotation = Quaternion.Lerp(CameraTarget.rotation, QT, Time.deltaTime * OrbitDampening);
+        cameraTarget.rotation = Quaternion.Lerp(cameraTarget.rotation, QT, Time.deltaTime * OrbitDampening);
 
-        if (CameraObj.localPosition.z != currentCameraZoom * -1f && !CameraMoveZoom)
+        if (cameraObj.localPosition.z != currentCameraZoom * -1f && !CameraMoveZoom)
         {
-            CameraObj.localPosition = new Vector3(0f, 0f, Mathf.Lerp(CameraObj.localPosition.z, currentCameraZoom * -1f, Time.deltaTime * ScrollDampening));
+            cameraObj.localPosition = new Vector3(0f, 0f, Mathf.Lerp(cameraObj.localPosition.z, currentCameraZoom * -1f, Time.deltaTime * ScrollDampening));
         }
     }
 }

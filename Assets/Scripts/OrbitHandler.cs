@@ -8,7 +8,6 @@ using UnityEngine;
 public class OrbitHandler : MonoBehaviour {
 
     public int resolution = 50;
-
     public short ID;
 
     //public double mAnomaly;
@@ -17,7 +16,6 @@ public class OrbitHandler : MonoBehaviour {
     public double LongitudeofP;
     public double longOfAccNode;
     public double inclination;
-
     public double eccentricAnomaly;
     public double trueAnomaly;
     public double distanceToCentralBody;
@@ -27,7 +25,6 @@ public class OrbitHandler : MonoBehaviour {
     private Vector3[] positions;
     private LineRenderer lr;
     private int orbitTolerance = 6;
-
 
     void OnValidate()
     {
@@ -82,17 +79,23 @@ public class OrbitHandler : MonoBehaviour {
         inc *= Mathf.Deg2Rad;
         w *= Mathf.Deg2Rad;
         O *= Mathf.Deg2Rad;
+		
+		if (caluclateArgP)
+		{
+			//If calculation is required, Longitude of P(w) subtracted by Longitude of Acc(O). Node gives the Argument of P(W)
+			W = w - O;
+		}
+		else
+		{
+			//If no calculation required, argument of p is the same as longitude of p
+			W = w;
+		}
 
-        //Longitude of P to Argument of P
-        if (caluclateArgP)
-            W = w - O;
-        else
-            W = w;
- 
-        //Gets E and True Anomaly
+        //Gets Eccentric Anomaly(E) and True Anomaly(Phi)
         eccentricAnomaly = GetEccentricAnomaly(meanAnomaly, e);
         trueAnomaly = GetTrueAnomaly(e, eccentricAnomaly) * Mathf.Deg2Rad;
 
+		//Calculate distance to centralbody(r)
         distanceToCentralBody = a * ((1 - (e*e)) / (1 + e * Math.Cos(trueAnomaly)));
 
         Vector3 o = new Vector3((float)(distanceToCentralBody * Math.Cos(trueAnomaly)), (float)(distanceToCentralBody * Math.Sin(trueAnomaly)), 0);
@@ -119,8 +122,7 @@ public class OrbitHandler : MonoBehaviour {
 
     private double GetEccentricAnomaly(double meanAnomaly, double e)
     {
-        //Solve kepler equation to get Ecentric anomaly
-        
+        //Solve kepler equation to get Ecentric anomaly 
         int maxIter = 30, i = 0;
         double delta = Math.Pow(10, -orbitTolerance);
         double E, Function;

@@ -11,17 +11,12 @@ public class BodyController : MonoBehaviour {
     private SaveLoad saveLoad;
 
     public List<BodySaveData> orbitalBodyData = new List<BodySaveData>();
-
-    //Sets modfier for AU scale. Default: 10 (1 unit in Unity = 0.1 AU) 
-    public static int auMultiplier = 10;
-
-    public bool canUpdate = false;
+	public bool canUpdate = false;
 	public bool tempUpdate = false;
 
-	// Use this for initialization
-	void Start () {
-        
-    }
+	//Sets modfier for AU scale. Default: 10 (1 unit in Unity = 0.1 AU) 
+	public static int auMultiplier = 10;
+
 
     private void Awake()
     {
@@ -37,13 +32,13 @@ public class BodyController : MonoBehaviour {
         UpdateActiveBodies(saveLoad.GetLoadedBodies());
 
         //Contact Nasa
-        //AccessJPLHorizon();
+        AccessJPLHorizon();
         EventManager.TriggerEvent("Start");
     }
 
     // Update is called once per frame
     void Update () {
-        if (jplConnect.clientDone)
+        if (jplConnect.ClientDone)
         {
             orbitalBodyData = jplConnect.GetBodyList();
             Debug.Log("Copied bodies");
@@ -53,7 +48,7 @@ public class BodyController : MonoBehaviour {
             Debug.Log("Try save");
             saveLoad.SaveOrbitalBodies(orbitalBodyData);
 
-            jplConnect.clientDone = false;
+            jplConnect.ClientDone = false;
             canUpdate = true;
         }
 
@@ -92,19 +87,19 @@ public class BodyController : MonoBehaviour {
         foreach (var orbitObj in orbitObjs)
         {
             OrbitHandler orbitHandler = orbitObj.GetComponent<OrbitHandler>();
-            Vector3[] orbitV3s = new Vector3[orbitHandler.resolution];
+            Vector3[] orbitV3S = new Vector3[orbitHandler.resolution];
             var lr = orbitObj.GetComponent<LineRenderer>();
             GameObject orbitalBody = GameObject.Find(orbitHandler.ID.ToString());
 
             for (int i = 0; i < orbitHandler.resolution; i++)
             {
-                orbitV3s[i] = lr.GetPosition(i);
+                orbitV3S[i] = lr.GetPosition(i);
             }
 
             Vector3 tMin = orbitalBody.transform.position;
             float minDist = Mathf.Infinity;
             Vector3 currentPos = orbitalBody.transform.position;
-            foreach (Vector3 t in orbitV3s)
+            foreach (Vector3 t in orbitV3S)
             {
                 float dist = Vector3.Distance(t, currentPos);
                 if (dist < minDist)

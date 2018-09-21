@@ -3,13 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 using UnityEngine;
 
 public class SaveLoad : MonoBehaviour {
 
     private string gameDataFileName = "data.json";
-    private List<BodySaveData> LoadedBodies = new List<BodySaveData>();
+    private List<BodySaveData> loadedBodies = new List<BodySaveData>();
 
     void Start()
     {
@@ -20,7 +19,7 @@ public class SaveLoad : MonoBehaviour {
 
     public List<BodySaveData> GetLoadedBodies()
     {
-        return LoadedBodies;
+        return loadedBodies;
     }
 
     public void LoadOrbitalBodies()
@@ -40,7 +39,7 @@ public class SaveLoad : MonoBehaviour {
                 string temp = "{"+item;
 
                 BodySaveData loadedBody = JsonUtility.FromJson<BodySaveData>(temp);
-                LoadedBodies.Add(loadedBody);
+                loadedBodies.Add(loadedBody);
             }
 
             Debug.Log("Loaded BodyData");
