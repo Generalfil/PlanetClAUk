@@ -14,7 +14,7 @@ public class RotateRenderer : MonoBehaviour
     private Quaternion RotateOrbitalBody(Quaternion orgRotation)
     {
         var now = DateTime.UtcNow;
-        float currentMinute = ((now.Hour * 60 + now.Minute))/360f + 180f;
+        float currentMinute = (0.25f*(now.Hour * 60 + now.Minute))/* + 180f*/;
 
         orgRotation = Quaternion.Euler(0, -currentMinute, 0);
 
