@@ -32,7 +32,7 @@ public class BodyController : MonoBehaviour {
         UpdateActiveBodies(saveLoad.GetLoadedBodies());
 
         //Contact Nasa
-        AccessJPLHorizon();
+        //AccessJPLHorizon();
         EventManager.TriggerEvent("Start");
     }
 
