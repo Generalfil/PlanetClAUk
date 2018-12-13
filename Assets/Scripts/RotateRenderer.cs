@@ -6,32 +6,55 @@ using UnityEngine;
 public class RotateRenderer : MonoBehaviour
 {
 	//public int debugV = 1;
-	int latestUpdateMin;
+	private int latestUpdateMin;
+	private int latestUpdateSec;
+
+	public bool debugRotate = false;
+
+	DateTime debugTime;
+
 	void Awake()
 	{
-		transform.localRotation = RotateOrbitalBody(transform.localRotation);
-		latestUpdateMin = DateTime.UtcNow.Minute;
+		transform.localRotation = RotateOrbitalBody(transform.localRotation, DateTime.UtcNow);
+		latestUpdateMin = DateTime.UtcNow.Hour + DateTime.UtcNow.Minute;
+		latestUpdateSec = DateTime.UtcNow.Second;
+		debugTime = DateTime.UtcNow;
 	}
 
 	// Update is called once per frame
 	void Update ()
     {
-		int currentMin = DateTime.UtcNow.Minute;
-		if (currentMin > latestUpdateMin)
+		if (!debugRotate)
 		{
-			transform.localRotation = RotateOrbitalBody(transform.localRotation);
-			latestUpdateMin = currentMin;
-		} 
+			int currentMin = DateTime.UtcNow.Hour * 60 + DateTime.UtcNow.Minute;
+			if (currentMin > latestUpdateMin || currentMin == 0)
+			{
+				transform.localRotation = RotateOrbitalBody(transform.localRotation, DateTime.UtcNow);
+				latestUpdateMin = currentMin;
+			}
+		}
+		else
+		{
+			int currentSec = DateTime.UtcNow.Second;
+			if (currentSec > latestUpdateSec || currentSec == 0)
+			{
+				Debug.Log(debugTime);
+				debugTime = debugTime.AddHours(1);
+				Debug.Log(debugTime);
+				transform.localRotation = RotateOrbitalBody(transform.localRotation, debugTime);
+				latestUpdateSec = currentSec;
+			}
+		}
+		
 	}
 
-    private Quaternion RotateOrbitalBody(Quaternion orgRotation)
+    private Quaternion RotateOrbitalBody(Quaternion orgRotation, DateTime now)
     {
-        var now = DateTime.UtcNow;
-		/*Debug.Log("Hr:" + now.Hour);
-		Debug.Log("Min:" + now.Minute);*/
+		Debug.Log("Hr:" + now.Hour);
+		Debug.Log("Min:" + now.Minute);
         float currentMinute = (0.25f*(now.Hour * 60 + now.Minute));
 
-        orgRotation = Quaternion.Euler(0, -currentMinute, 0);
+        orgRotation = Quaternion.Euler(0, -currentMinute-90, 0);
 
         return orgRotation;
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,6 +15,11 @@ public class BodyController : MonoBehaviour {
 	public bool canUpdate = false;
 	public bool tempUpdate = false;
 
+	public enum LoadingStatus
+	{
+
+	}
+
 	//Sets modfier for AU scale. Default: 10 (1 unit in Unity = 0.1 AU) 
 	public static int auMultiplier = 10;
 
@@ -22,6 +28,10 @@ public class BodyController : MonoBehaviour {
     {
         foreach (Transform bChild in transform)
         {
+			if (!bChild.gameObject.activeSelf)
+			{
+				continue;
+			}
             bodiesToAccess.Add(bChild.name);
             activeBodies.Add(bChild.gameObject);
         }
@@ -36,8 +46,16 @@ public class BodyController : MonoBehaviour {
         EventManager.TriggerEvent("Start");
     }
 
-    // Update is called once per frame
-    void Update () {
+	private void OnApplicationQuit()
+	{
+		if (jplConnect.readWriteThread != null)
+		{
+			jplConnect.readWriteThread.Abort();
+		}
+	}
+
+	// Update is called once per frame
+	void Update () {
         if (jplConnect.ClientDone)
         {
             orbitalBodyData = jplConnect.GetBodyList();

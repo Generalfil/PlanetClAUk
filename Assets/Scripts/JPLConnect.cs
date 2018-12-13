@@ -8,8 +8,7 @@ using System.Diagnostics;
 
 public class JPLConnect {
 
-    private TcpClient client;
-    private Thread readWriteThread;
+    private TcpClient client; 
     private NetworkStream networkStream;
     private DateTime today;
     private DateTime tomorrow;
@@ -18,7 +17,8 @@ public class JPLConnect {
     private float timeoutPerBody = 5f;
     private string startingBody;
 
-    public bool ClientDone = false;
+	public Thread readWriteThread;
+	public bool ClientDone = false;
 
     public JPLConnect()
     {
